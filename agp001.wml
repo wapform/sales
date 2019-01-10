@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="big5"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <wml>
   <card id="P" title="系統參數建檔">
     <dbtable tablename="sys">
@@ -20,24 +20,22 @@
       <field fieldname="New" displaylabel="最新動態"/>
     </dbtable>
     <datasource dataset="sys">
-<p>
-<fieldset>
-公司名稱:<input field="Company" size="30"/><br/>
-公司地址:<input field="Addr" size="40"/><br/>
-統一編號:<input field="AC" size="10"/><br/>
-郵遞區號:<input field="Zip" size="10"/><br/>
-電話:<input field="Phone" size="15"/><br/>
-傳真:<input field="FAX" size="15"/><br/>
-稅率:<input field="TaxRate" size="2"/><br/>
-列表機-1:<input field="Printer1" size="20"/><br/>
-列表機-2:<input field="Printer2" size="20"/><br/>
-列表機-3:<input field="Printer3" size="20"/><br/>
-結帳日起:<input field="AcBeg" size="8"/><br/>
-結帳日訖:<input field="AcEnd" size="8"/><br/>
-訂單備註:<input field="Rem" size="60"/><br/>
-最新動態:<input field="New" size="60"/>
-</fieldset>
-</p>
+      <fieldset>
+      公司名稱:<input field="Company" size="30"/><br/>
+      公司地址:<input field="Addr" size="40"/><br/>
+      統一編號:<input field="AC" size="10"/><br/>
+      郵遞區號:<input field="Zip" size="10"/><br/>
+      電話:<input field="Phone" size="15"/><br/>
+      傳真:<input field="FAX" size="15"/><br/>
+      稅率:<input field="TaxRate" size="2"/><br/>
+      列表機-1:<input field="Printer1" size="20"/><br/>
+      列表機-2:<input field="Printer2" size="20"/><br/>
+      列表機-3:<input field="Printer3" size="20"/><br/>
+      結帳日起:<input field="AcBeg" size="8"/><br/>
+      結帳日訖:<input field="AcEnd" size="8"/><br/>
+      訂單備註:<input field="Rem" size="60"/><br/>
+      最新動態:<input field="New" size="60"/>
+      </fieldset>
     </datasource>
     <do type="prev" label="關閉">
       <prev/>
