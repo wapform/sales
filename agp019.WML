@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="出貨明細表">
+    <p>
+        <br/>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        出貨單號:<input name="D" value="9501020001" size="14"/>
+        ～<input name="E" value="9501029999" size="14"/><br/>
+        <br/>
+        輸出選擇:<input name="F" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (F='S','PRV','PRN'))" paper="Letter">
+    <setvar name="BB" value="0"/>
+    <setvar name="BC" value="0"/>
+    <dbtable tablename="sys">
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <dbquery id="sh">
+    <![CDATA[
+    SELECT
+      sh.SNo, sh.SDate, sh.CNo, cu.CShort, sh.ENo, em.EName,
+      sh.amount, sh.tax, sh.rem
+    FROM
+      sh, cu, em
+    WHERE
+      sh.SNo >= '$D' and sh.SNo <= '$E'
+      and
+      em.ENo = sh.ENo
+      and
+      cu.CNo = sh.CNo
+    ORDER BY
+      sh.SNo
+    ]]>
+    </dbquery>
+    <output dataset="sh" dialog="SNo" rows="60">
+      <setvar name="BB" value="0"/>
+      <setvar name="BC" value="0"/>
+      <page>
+        <out><![CDATA[<table width="760" align="center"><tr><td>]]></out>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>出貨明細表</big></p></td></tr>
+          <tr>
+            <td>&#160;</td>
+            <td>&#160;</td>
+            <td width="105">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>出貨單號:$D～$E</td>
+            <td>&#160;</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table class="p09" width="100%">
+          <tr>
+            <th width="80">單號</th>
+            <th width="70">日期</th>
+            <th width="60">客戶代號</th>
+            <th width="60">客戶名稱</th>
+            <th width="60">員工代號</th>
+            <th width="60">業務員</th>
+            <th width="60">金額</th>
+            <th width="60">稅額</th>
+            <th>備註</th>
+          </tr>
+          <group>
+            <tr>
+              <td>$(sh.SNo)</td>
+              <td>$(sh.SDate)</td>
+              <td>$(sh.Cno)</td>
+              <td>$(sh.CShort)</td>
+              <td>$(sh.Eno)</td>
+              <td>$(sh.EName)</td>
+              <td><p align="right">$(FORMAT('%9.0n',sh.amount*1.0))</p></td>
+              <td><p align="right">$(FORMAT('%9.0n',sh.tax*1.0))</p></td>
+              <td>&#160;$sh.rem</td>
+            </tr>
+            <setvar name="BB" value="BB+sh.amount"/>
+            <setvar name="BC" value="BC+sh.tax"/>
+          </group>
+          <if cnd="sh.eof">
+            <tr>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><u>$(FORMAT('%9.0n',BB*1.0))</u></p></td>
+              <td><p align="right"><u>$(FORMAT('%9.0n',BC*1.0))</u></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+          </if>
+        </table>
+        <out><![CDATA[</td></tr></table>]]></out>
+      </page>
+      <p align="center">$sys.design</p>
+    </output>
+  </card>
+</wml>

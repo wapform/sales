@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="資料列印" device="$(IF (E='S','PRV','PRN'))" paper="Letter">
+    <dbtable tablename="cu" filter="CNo &gt;= $request.C and CNo &lt;= $request.D">
+      <field fieldname="CNo" displaylabel="客戶代號"/>
+      <field fieldname="CName" displaylabel="客戶名稱"/>
+      <field fieldname="Cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="Fax" displaylabel="傳真"/>
+      <field fieldname="Ac" displaylabel="統一編號"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+    </dbtable>
+    <output dataset="cu" dialog="CNo" rows="60">
+      <page>
+        <out><![CDATA[<table width="780" align="center"><tr><td>]]></out>
+        <setvar name="I" value="1"/>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>客戶資料表</big></p></td></tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td width="100">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>客戶代號:$(C)～$(D)</td>
+            <td>&nbsp;</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr class="row">
+            <th width="63">客戶代號</th>
+            <th width="217">客戶名稱</th>
+            <th width="105">傳真</th>
+            <th width="63">聯絡人</th>
+            <th>發票地址</th>
+          </tr>
+          <tr class="row">
+            <th>&nbsp;</th>
+            <th>電話</th>
+            <th>&nbsp;</th>
+            <th>統一編號</th>
+            <th>公司地址</th>
+          </tr>
+          <group>
+            <tr class="$(IIF(I mod 2 = 1, 'row1', 'row2'))">
+              <td>$(cu.CNo)</td>
+              <td>$(cu.CName)</td>
+              <td>$(cu.Fax)</td>
+              <td>$(cu.Contact)</td>
+              <td>$(cu.Addr1)</td>
+            </tr>
+            <tr class="$(IIF(I mod 2 = 1, 'row1', 'row2'))">
+              <td><p>&nbsp;</p></td>
+              <td>$(cu.Phone)</td>
+              <td><p>&nbsp;</p></td>
+              <td>$(cu.Ac)</td>
+              <td>$(cu.Addr2)</td>
+            </tr>
+            <setvar name="I" value="I+1"/>
+            <setvar name="cucshort" value="MID(cucname,1,8)"/>
+          </group>
+        </table>
+        <out><![CDATA[</td></tr></table>]]></out>
+      </page>
+      <p align="center">$sys.design</p>
+    </output>
+  </card>
+</wml>

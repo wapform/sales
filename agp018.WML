@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="銀行資料建檔">
+    <dbtable tablename="bk">
+      <field fieldname="Bno" displaylabel="NO"/>
+      <field fieldname="Bname" displaylabel="銀行名稱"/>
+    </dbtable>
+      <datasource dataset="bk">
+        <p align="center">
+        <navigator/>
+        </p>
+        <dbgrid width="600" height="300" entertotab="false" multiselect="true">
+          <item field="Bno" size="3"/>
+          <item field="Bname" size="12"/>
+        </dbgrid>
+      </datasource>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

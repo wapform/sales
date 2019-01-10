@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="產品資料建檔">
+    <dbtable tablename="pa" readonly="true">
+      <field fieldname="Pno" displaylabel="貨號"/>
+      <field fieldname="Qno" displaylabel="品號"/>
+      <field fieldname="Barcode" displaylabel="條碼"/>
+      <field fieldname="Sub" displaylabel="類別"/>
+      <field fieldname="Grp" displaylabel="細類"/>
+      <field fieldname="Des" displaylabel="品名規格"/>
+      <field fieldname="Unit" displaylabel="單位"/>
+      <field fieldname="pricea" displaylabel="標準進價"/>
+      <field fieldname="priceb" displaylabel="最近進價"/>
+      <field fieldname="pricec" displaylabel="市價"/>
+      <field fieldname="price1" displaylabel="事售價"/>
+      <field fieldname="price2" displaylabel="金售價"/>
+      <field fieldname="price3" displaylabel="售價三"/>
+      <field fieldname="UDate" displaylabel="更新日期"/>
+    </dbtable>
+    <p>
+      <datasource dataset="pa">
+        <navigator/>
+        <br/>
+        <dbgrid width="750" height="420" multiselect="true">
+          <item field="Pno" size="14"/>
+          <item field="Qno" size="14"/>
+          <item field="UDate" size="10"/>
+          <item field="Sub" size="10"/>
+          <item field="Grp" size="10"/>
+          <item field="Des" size="30"/>
+          <item field="Unit" size="4"/>
+          <item field="pricea" size="6"/>
+          <item field="priceb" size="6"/>
+          <item field="pricec" size="6"/>
+          <item field="price1" size="6"/>
+          <item field="price2" size="6"/>
+          <item field="price3" size="6"/>
+          <item field="Barcode" size="14"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

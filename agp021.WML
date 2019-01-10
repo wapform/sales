@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="進貨清單列印(單號別)">
+    <setvar name="TDATE" value="FORMAT('%2.2d',YEAR(DATE)-1911)+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <p>
+        <br/>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        出貨單號:<input name="D" value="$(MID(TDATE,1,4)+'010000')" size="12"/>
+        ～<input name="E" value="$(MID(TDATE,1,4)+'319999')" size="12"/><br/>
+        <br/>
+        輸出選擇:<input name="F" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (F='S','PRV','PRN'))" paper="Letter">
+    <setvar name="BB" value="0"/>
+    <setvar name="BC" value="0"/>
+    <setvar name="BD" value="''"/>
+    <dbtable tablename="sys">               
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <dbquery id="sn">
+    <![CDATA[
+    SELECT
+      sh.SNo, sh.SDate, sh.CNo, sh.ENo, em.EName, sn.pno, pa.des, pa.pricea,
+      sn.Qty, sn.Price, sn.Qty*pa.pricea X,
+      sn.Rem, cu.CShort
+    FROM
+      sh, sn, em, pa, cu
+    WHERE
+      sh.SNo >= '$D' and sh.SNo <= '$E'
+      and
+      sh.SNo = sn.SNo
+      and
+      em.ENo = sh.ENo
+      and
+      cu.CNo = sh.CNo
+      and
+      pa.pno = sn.pno
+    ORDER BY
+      sh.SNo
+    ]]>
+    </dbquery>
+    <output dataset="sn" dialog="SNo" rows="66">
+      <setvar name="BC" value="0"/>
+      <page>
+        <out><![CDATA[<table width="760" align="center"><tr><td>]]></out>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>進貨清單(單號別)</big></p></td></tr>
+          <tr>
+            <td>&#160;</td>
+            <td>&#160;</td>
+            <td width="105">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>出貨單號:$D～$E</td>
+            <td>&#160;</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table class="p08" width="100%">
+          <tr>
+            <th width="60">單號</th>
+            <th width="60">日期</th>
+            <th width="50">客戶</th>
+            <th width="50">業務員</th>
+            <th width="60">貨號</th>
+            <th width="220">品名規格</th>
+            <th width="40">數量</th>
+            <th width="40">單價</th>
+            <th width="50">金額</th>
+            <th>備註</th>
+          </tr>
+          <group change="sn.SNo">
+            <setvar name="I" value="0"/>
+            <setvar name="BB" value="0"/>
+            <setvar name="BD" value="'N'"/>
+            <group>
+              <if cnd="BD='N'">
+                <tr>
+                  <td>$(sn.SNo)</td>
+                  <td>$(sn.SDate)</td>
+                  <td>$(sn.CShort)</td>
+                  <td>$(sn.EName)</td>
+                  <td>$(sn.pno)</td>
+                  <td>$(sn.des)</td>
+                  <td><p align="right">$(sn.qty)</p></td>
+                  <td><p align="right">$(sn.pricea)</p></td>
+                  <td><p align="right">$(FORMAT('%7.0n',sn.X*1.0))</p></td>
+                  <td>&#160;$(sn.Rem)</td>
+                </tr>
+              </if>
+              <if cnd="BD='Y'">
+                <tr>
+                  <td><p>&#160;</p></td>
+                  <td><p>&#160;</p></td>
+                  <td><p>&#160;</p></td>
+                  <td><p>&#160;</p></td>
+                  <td>$(sn.pno)</td>
+                  <td>$(sn.des)</td>
+                  <td><p align="right">$(sn.qty)</p></td>
+                  <td><p align="right">$(sn.pricea)</p></td>
+                  <td><p align="right">$(FORMAT('%7.0n',sn.X*1.0))</p></td>
+                  <td>&#160;$(sn.Rem)</td>
+                </tr>
+              </if>
+              <setvar name="I" value="I+1"/>
+              <setvar name="BD" value="'Y'"/>
+              <setvar name="BB" value="BB+sn.X"/>
+              <setvar name="BC" value="BC+sn.X"/>
+            </group>
+            <tr>
+              <td><p>共$(I)筆</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><u>$(FORMAT('%7.0n',BB*1.0))</u></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+            <tr>
+              <td colspan="9"><p>&#160;</p></td>
+            </tr>
+          </group>
+          <if cnd="sn.eof">
+            <tr>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><b><u>$(FORMAT('%7.0n',BC*1.0))</u></b></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+            <tr>
+              <td colspan="10"><p>&#160;</p></td>
+            </tr>
+          </if>
+        </table>
+        <out><![CDATA[</td></tr></table>]]></out>
+      </page>
+      <p align="center">$sys.design</p>
+    </output>
+  </card>
+</wml>

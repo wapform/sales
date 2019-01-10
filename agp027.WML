@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="客戶資料建檔2" width="660">
+    <dbtable tablename="cu">
+      <field fieldname="Cno" displaylabel="客戶代號"/>
+      <field fieldname="Cname" displaylabel="客戶名稱"/>
+      <field fieldname="Cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Ziq" displaylabel="貨運區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Email" displaylabel="電子郵件"/> 
+      <field fieldname="Password" displaylabel="密碼"/>    
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+      <field fieldname="Level" displaylabel="等級"/>
+      <field fieldname="Pay" displaylabel="付款"/>
+      <field fieldname="AType" displaylabel="發票聯式"/>
+      <field fieldname="Capital" displaylabel="資本額"/>
+      <field fieldname="CDate" displaylabel="建檔日期"/>
+      <field fieldname="Rem" displaylabel="備註"/>
+    </dbtable>
+      <datasource dataset="cu">
+        <p align="center">
+          <navigator/>
+        </p>
+        <br/>
+        <table columns="2" align="RL">
+        <tr><td>客戶代號:</td><td><input field="Cno" size="8"/></td></tr>
+        <tr><td>建檔日期:</td><td><input field="CDate" size="10"/></td></tr>
+        <tr><td>付款:</td><td><input field="Pay" size="8"/></td></tr>
+        <tr><td>發票聯式:</td><td><input field="AType" size="6"/></td></tr>
+        <tr><td>客戶名稱:</td><td><input field="Cname" size="40"/></td></tr>
+        <tr><td>客戶簡稱:</td><td><input field="Cshort" size="8"/></td></tr>
+        <tr><td>電話:</td><td><input field="Phone" size="20"/></td></tr>
+        <tr><td>聯絡人:</td><td><input field="Contact" size="10"/></td></tr>
+        <tr><td>地址1:</td><td><input field="Addr1" size="60"/></td></tr>
+        <tr><td>地址2:</td><td><input field="Addr2" size="60"/></td></tr>
+        <tr><td>統一編號:</td><td><input field="AC" size="8"/></td></tr>
+        <tr><td>郵遞區號:</td><td><input field="Zip" size="8"/></td></tr>
+        <tr><td>貨運區號:</td><td><input field="Ziq" size="8"/></td></tr>
+        <tr><td>傳真:</td><td><input field="FAX" size="15"/></td></tr>
+        <tr><td>行動:</td><td><input field="GSM" size="15"/></td></tr>
+        <tr><td>電子郵件:</td><td><input field="Email" size="30"/></td></tr>
+        <tr><td>密碼:</td><td><input field="Password" size="40"/></td></tr>
+        <tr><td>負責人:</td><td><input field="Charger" size="10"/></td></tr>
+        <tr><td>資本額:</td><td><input field="Capital" size="12"/></td></tr>
+        <tr><td>備註:</td><td><input field="Rem" size="40"/></td></tr>
+        </table>
+      </datasource>
+    <do type="accept" label="標籤">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="PRV" paper="Letter">
+    <output dataset="cu" dialog="CNo">
+      <setvar name="I" value="0"/>
+      <group>
+        <setvar name="I" value="I+1"/>
+        <if cnd="I>4">
+          <newpage cnd="not(cu.bof)"/>
+          <setvar name="I" value="1"/>
+        </if>
+        <table>
+          <tr><td width="300">$(cu.Zip)</td></tr>
+          <tr><td>$(MID(cu.Addr1,1,40))</td></tr>
+          <tr><td>$(MID(cu.Addr1,41,20))</td></tr>
+          <tr><td><b>$(cu.cname)</b></td></tr>
+          <if cnd="cu.contact&lt;&gt;''"><tr><td>$(cu.contact)&#160;&#160;&#160;啟</td></tr></if>
+          <if cnd="cu.contact=''"><tr><td>採購人員&#160;&#160;&#160;啟</td></tr></if>
+        </table>
+        <if cnd="I&lt;4">
+        <out><![CDATA[<table border="0" width="100%"><tr><td height="36"></td></tr></table>]]></out>
+        </if>
+      </group>
+    </output>
+  </card>
+</wml>

@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="產品資料建檔2" width="660">
+    <dbtable tablename="pa" indexfieldnames="pno">
+      <field fieldname="Pno" displaylabel="貨號"/>
+      <field fieldname="Qno" displaylabel="品號">
+      <onevent type="onchange">     
+        <dbquery id="xyz"><![CDATA[select * from pa where qno='$pa.qno']]></dbquery>
+        <alert message="品號重複!!!" cnd="xyz.count>0"/>
+      </onevent>
+      </field>                                                     
+      <field fieldname="Barcode" displaylabel="條碼"/>
+      <field fieldname="sid" displaylabel="類別"/>
+      <dbtable name="aaa" tablename="web" keyfields="sid" lookupkeyfields="id">
+        <field name="sub" fieldname="title" displaylabel="類別"/>
+      </dbtable>     
+      <field fieldname="gid" displaylabel="細類"/>     
+      <dbtable name="bbb" tablename="web" keyfields="gid" lookupkeyfields="id">
+        <field name="grp" fieldname="title" displaylabel="細類"/>
+      </dbtable>     
+      <field fieldname="vno" displaylabel="廠商代號">     
+      <onevent type="onchange">                    
+        <if cnd="pa.qno=''"> 
+        <insert name="qno" into="id" values="$(pa.gid+pa.vno)"/>
+        <dbquery><![CDATA[update qno set no=no+1 where id='$(pa.gid+pa.vno)']]></dbquery>
+        <dbquery id="maxno"><![CDATA[select no from qno where id='$(pa.gid+pa.vno)']]></dbquery>
+        <setvar name="papno" value="pagid+pavno+FORMAT('%2.2d',maxno.no)"/>
+        </if>
+      </onevent>
+      </field>                                                     
+      <dbtable tablename="ve" keyfields="vno" lookupkeyfields="vno">
+        <field fieldname="vshort" displaylabel="廠商簡稱"/>
+      </dbtable>     
+      <field fieldname="Des" displaylabel="品名規格"/>
+      <field fieldname="Unit" displaylabel="單位"/>
+      <field fieldname="pricea" displaylabel="標準進價"/>
+      <field fieldname="priceb" displaylabel="最近進價"/>
+      <field fieldname="pricec" displaylabel="市價"/>
+      <field fieldname="price1" displaylabel="事售價"/>
+      <field fieldname="price2" displaylabel="金售價"/>
+      <field fieldname="price3" displaylabel="售價三"/>
+      <field fieldname="UDate" displaylabel="更新日期"/>
+      <onevent type="onnewrecord">
+        <setvar name="paactive" value="1"/>
+      </onevent>
+      <onevent type="afterpost">                       
+        <dbquery><![CDATA[update qno set no=$(VAL(MID(pa.pno,8,2))) where id='$(pa.gid+pa.vno)']]></dbquery>
+      </onevent>
+    </dbtable>                    
+      <datasource dataset="pa">
+        <p align="center">
+          <navigator/>
+        </p>
+        <br/>
+        <table columns="2" align="RL">
+        <tr><td>貨號:</td><td><input field="Pno" size="14"/></td></tr>
+        <tr><td>品號</td><td><input field="Qno" size="14"/></td></tr>
+        <tr><td>條碼:</td><td><input field="Barcode" size="40"/></td></tr>
+        <tr><td>更新日期:</td><td><input field="UDate" size="10"/></td></tr>
+        <tr><td>類別:</td><td><input field="sid" size="10" oncustomdlg="#sub"/><input field="Sub" size="10"/></td></tr>
+        <tr><td>細類:</td><td><input field="gid" size="10" oncustomdlg="#grp"/><input field="Grp" size="10"/></td></tr>
+        <tr><td>廠商代號:</td><td><input field="vno" size="10" oncustomdlg="#ve"/><input field="vshort" size="10"/></td></tr>
+        <tr><td>品名規格:</td><td><input field="Des" size="40"/></td></tr>                     
+        <tr><td>單位:</td><td><input field="Unit" size="4"/></td></tr>
+        <tr><td>標準進價:</td><td><input field="pricea" size="6"/></td></tr>
+        <tr><td>最近進價:</td><td><input field="priceb" size="6"/></td></tr>
+        <tr><td>市價:</td><td><input field="pricec" size="6"/></td></tr>
+        <tr><td>事售價:</td><td><input field="price1" size="6"/></td></tr>
+        <tr><td>金售價:</td><td><input field="price2" size="6"/></td></tr>
+        <tr><td>售價三:</td><td><input field="price3" size="6"/></td></tr>
+        </table>
+      </datasource>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>                        
+  <card id="sub" title="">       
+    <dbquery id="sub"><![CDATA[select id,title from web where sub='0000' order by id]]></dbquery>
+    <call name="sub" method="locate" params="'id';pa.sid"/>
+    <p>
+      <datasource dataset="sub">
+        <navigator/>
+        <br/>
+        <dbgrid width="320" height="450" entertotab="false">
+          <item field="id" size="8"/>
+          <item field="title" size="30"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="accept" label="確定">
+      <prev>
+        <setvar name="pasid" value="sub.id"/>
+      </prev>
+    </do>
+    <do type="accept" label="取消">
+      <prev/>
+    </do>
+  </card>                           
+  <card id="grp" title="">       
+    <dbquery id="grp"><![CDATA[select id,title from web where sub='$pa.sid' order by id]]></dbquery>
+    <call name="grp" method="locate" params="'id';pa.gid"/>              
+    <p>
+      <datasource dataset="grp">
+        <navigator/>
+        <br/>
+        <dbgrid width="320" height="450" entertotab="false">
+          <item field="id" size="8"/>
+          <item field="title" size="30"/>                          
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="accept" label="確定">
+      <prev>
+        <setvar name="pagid" value="grp.id"/>
+      </prev>
+    </do>
+    <do type="accept" label="取消">
+      <prev/>
+    </do>
+  </card>
+  <card id="ve" title="">       
+    <dbquery id="v"><![CDATA[select vno, vname from ve order by vno]]></dbquery>
+    <call name="v" method="locate" params="'vno';pa.vno"/>              
+    <p>                                                              
+      <datasource dataset="v">                      
+        <navigator/>
+        <br/>
+        <dbgrid width="320" height="450" entertotab="false">
+          <item field="vno" size="8"/>
+          <item field="vname" size="30"/>
+        </dbgrid>
+      </datasource>
+    </p>    <do type="accept" label="確定">
+      <prev>
+        <setvar name="pavno" value="v.vno"/>
+      </prev>
+    </do>
+    <do type="accept" label="取消">
+      <prev/>
+    </do>  
+  </card>
+</wml>

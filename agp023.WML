@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="收款單建檔">
+
+    <setvar name="PDATE" value="FORMAT('%2.2d',YEAR(DATE)-1911)+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <setvar name="B" value="0"/>
+    <setvar name="DeletingItems" value="0"/>
+    <setvar name="BookMark" value="0"/>
+    <setvar name="BTN" value="0"/>
+
+    <setvar name="_KDRQ1" value="''"/>
+    <setvar name="_KDRQ2" value="''"/>
+    <setvar name="_STYLE1" value="''"/>
+    <setvar name="_STYLE2" value="''"/>
+    <setvar name="_STYLE3" value="''"/>
+    <setvar name="_STYLE5" value="''"/>
+    <setvar name="_STYLE6" value="''"/>
+    <setvar name="_STYLE7" value="''"/>
+    <setvar name="_STYLE8" value="''"/>
+    <setvar name="_STYLE9" value="''"/>
+    <setvar name="_STYLEA" value="''"/>
+    <setvar name="_STYLEB" value="''"/>
+
+    <dbtable tablename="sys">
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="AcBeg" displaylabel="結帳日起"/>
+      <field fieldname="AcEnd" displaylabel="結帳日訖"/>
+    </dbtable>
+
+    <dbquery id="sh"><![CDATA[select
+    sh.sno,sh.sdate,sh.cno,cu.cshort,cu.AC,sh.Pay,sh.TaxRate,sh.Amount,sh.Tax,sh.AmountTax,sh.Paid,sh.GetDate,sh.PayDate,
+    sh.gno,sh.fty,sh.ChkNo,sh.fno,sh.rempay,fm.fname
+    from sh, cu, fm where sh.cno=cu.cno and sh.fno=fm.fno and sh.sno='XYZ' order by sh.sno]]>
+      <field fieldname="sno" displaylabel="出貨單號"/>
+      <field fieldname="sdate" displaylabel="出貨日期"/>
+      <field fieldname="cno" displaylabel="客戶代號"/>
+      <field fieldname="cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Pay" displaylabel="付款"/>
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Amount" displaylabel="出貨金額"/>
+      <field fieldname="Tax" displaylabel="稅率"/>
+      <field fieldname="AmountTax" displaylabel="含稅金額"/>
+      <field fieldname="Paid" displaylabel="已收金額"/>
+      <field fieldname="Taxx" displaylabel="營業稅額" type="integer" value="sh.Amount*sh.TaxRate/100"/>
+      <field fieldname="UnPaid" displaylabel="未收金額" type="integer" value="sh.Amount+sh.Taxx-sh.Paid"/>
+      <field fieldname="GetDate" displaylabel="收票日"/>
+      <field fieldname="PayDate" displaylabel="到期日"/>
+      <field fieldname="gno" displaylabel="板號"/>
+      <field fieldname="fty" displaylabel="件數"/>
+      <field fieldname="ChkNo" displaylabel="支票號碼"/>
+      <field fieldname="fno" displaylabel="貨運代號"/>
+      <field fieldname="fname" displaylabel="貨運名稱"/>
+      <field fieldname="RemPay" displaylabel="備註"/>
+    </dbquery>
+
+    <function id="xyz">
+      <setvar name="BTN" value="BTN+1"/>
+      <if cnd="BTN=1">
+      <setvar name="S" value="''"/>
+      <setvar name="S" value="S+' AND sh.sdate &gt;= '''+KDRQ1+''''" cnd="KDRQ1&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.sdate &lt;= '''+KDRQ2+''''" cnd="KDRQ2&lt;&gt;''"/>
+      <if cnd="STYLE2=''">
+      <setvar name="S" value="S+' AND sh.cno like '''+STYLE1+'%'''" cnd="STYLE1&lt;&gt;''"/>
+      <else/>
+      <setvar name="S" value="S+' AND sh.cno &gt;= '''+STYLE1+''''" cnd="STYLE1&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.cno &lt;= '''+STYLE2+''''" cnd="STYLE2&lt;&gt;''"/>
+      </if>
+      <setvar name="S" value="S+' AND sh.rempay like ''%'+STYLE3+'%'''" cnd="STYLE3&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND cu.cshort like '''+STYLE5+'%'''" cnd="STYLE5&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND fm.fname like '''+STYLEB+'%'''" cnd="STYLEB&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.ac like '''+STYLE6+'%'''" cnd="STYLE6&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.gno like '''+STYLE7+'%'''" cnd="STYLE7&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.chkno like '''+STYLE8+'%'''" cnd="STYLE8&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.amounttax = '+STYLEA" cnd="STYLEA&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.pay like '''+STYLE9+''''" cnd="STYLE9&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.AmountTax-ifnull(sh.Paid,0)>0'" cnd="YN='Y'"/>
+
+    <dbquery id="sh"><![CDATA[
+    select sh.sno,sh.sdate,sh.cno,cu.cshort,cu.AC,sh.Pay,sh.TaxRate,sh.Amount,sh.Tax,sh.AmountTax,sh.Paid,sh.GetDate,sh.PayDate,
+    sh.gno,sh.fty,sh.ChkNo,sh.fno,sh.rempay,fm.fname
+    from sh, cu, fm where sh.cno=cu.cno and sh.fno=fm.fno $S order by sh.sno
+    ]]>
+    </dbquery>
+
+      </if>
+      <setvar name="BTN" value="0"/>
+    </function>
+
+    <function id="clr">
+      <setvar name="KDRQ1" value="''"/>
+      <setvar name="KDRQ2" value="''"/>
+      <setvar name="STYLE1" value="''"/>
+      <setvar name="STYLE2" value="''"/>
+      <setvar name="STYLE3" value="''"/>
+      <setvar name="STYLE5" value="''"/>
+      <setvar name="STYLE6" value="''"/>
+      <setvar name="STYLE9" value="''"/>
+      <setvar name="STYLEA" value="''"/>
+      <setvar name="STYLEB" value="''"/>
+      <go href="@xyz"/>
+    </function>
+
+    <function id="set">
+        <setvar name="_KDRQ1" value="KDRQ1"/>
+        <setvar name="_KDRQ2" value="KDRQ2"/>
+        <setvar name="_STYLE1" value="STYLE1"/>
+        <setvar name="_STYLE2" value="STYLE2"/>
+        <setvar name="_STYLE3" value="STYLE3"/>
+        <setvar name="_STYLE5" value="STYLE5"/>
+        <setvar name="_STYLE6" value="STYLE6"/>
+        <setvar name="_STYLE7" value="STYLE7"/>
+        <setvar name="_STYLE8" value="STYLE8"/>
+        <setvar name="_STYLE9" value="STYLE9"/>
+        <setvar name="_STYLEA" value="STYLEA"/>
+        <setvar name="_STYLEB" value="STYLEB"/>
+    </function>
+
+      <table columns="6" align="LLLLLL">
+      <tr>
+      <td width="190">出貨日期起:<input name="KDRQ1" value="$_KDRQ1" type="date" size="14"/><br/>出貨日期訖:<input name="KDRQ2" value="$_KDRQ2" type="date" size="14"/></td>
+      <td width="180">客戶代號起:<input name="STYLE1" value="$_STYLE1" size="12" lookup="cu;cno;cshort"/><br/>客戶代號訖:<input name="STYLE2" value="$_STYLE2" size="12" lookup="cu;cno;cshort"/></td>
+      <td width="160">客戶簡稱:<input name="STYLE5" value="$_STYLE5" size="12"/><br/>統一編號:<input name="STYLE6" value="$_STYLE6" size="12"/></td>
+      <td width="120">含稅:<input name="STYLEA" value="$_STYLEA" size="12"/><br/>付款:<input name="STYLE9" value="$_STYLE9" size="12"/></td>
+      <td width="140">板號:<input name="STYLE7" value="$_STYLE7" size="12"/><br/>票號:<input name="STYLE8" value="$_STYLE8" size="12"/></td>
+      <td width="150">貨運:<input name="STYLEB" value="$_STYLEB" size="12" lookup="sql;fm;select fname from fm order by fno"/><br/>備註:<input name="STYLE3" value="$_STYLE3" size="12"/><br/>未收:<input type="checkbox" name="YN" value="Y"/></td>
+      <td><input name="EXE" value="查詢" type="button" onclick="@xyz"/><br/><input name="CLR" value="清除" type="button" onclick="@clr"/></td>
+      </tr>
+      </table>
+    
+    <datasource dataset="sh">
+      <p align="center"><navigator/></p>
+      <dbgrid width="1000" height="500">
+        <item field="sno"/>
+        <item field="sdate" size="14"/>
+        <item field="cno" lookup="cu;cno;cshort"/>
+        <item field="cshort" size="8"/>
+        <item field="ac" size="8"/>
+        <item field="AmountTax" size="11"/>
+        <item field="pay" size="8"/>
+        <item field="Paid" size="11"/>
+        <item field="UnPaid" size="11"/>
+        <item field="GetDate" size="10"/>
+        <item field="PayDate" size="10"/>
+        <item field="fname" size="10"/>
+        <item field="gno" size="10"/>
+        <item field="ChkNo" size="10"/>
+        <item field="fty" size="6"/>
+        <item field="RemPay" size="40"/>
+      </dbgrid>
+    </datasource>
+
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

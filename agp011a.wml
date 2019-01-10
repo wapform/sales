@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="客戶標籤列印">
+    <dbtable tablename="sys" keyfields="1">
+      <field fieldname="Company" displaylabel="公司名稱"/>
+    </dbtable>
+    <p>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        <br/>
+        客戶代號:<input name="D" value="407-000" size="12"/>
+        ～<input name="E" value="407-999" size="12"/><br/>
+        <br/>
+        資.本.額:<input name="X" value="5000" size="12"/>
+        ～<input name="Y" value="500000" size="12"/><br/>
+        <br/>
+        標籤間距:<input name="SS" value="36" size="6"/><br/>
+        <br/>
+        輸出選擇:<input name="G" value="S" size="1"/>
+        (S.螢幕P.列表機)
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (G='S','PRV','PRN'))" paper="Letter">
+    <dbquery id="cu">
+    <![CDATA[
+select cu.cno, cu.cname, cu.zip, cu.addr1, cu.contact, cu.Capital,
+  sum(sh.amount) as amount, count(sh.sno) as qty from cu
+left join sh on sh.cno=cu.cno
+where (cu.cno>='$D') and (cu.cno<='$E') and (cu.Capital>=$X) and (cu.Capital<=$Y)
+group by cu.cno
+order by cu.cno
+    ]]>
+    </dbquery>
+    <output dataset="cu" dialog="CNo">
+      <setvar name="I" value="0"/>
+      <group>
+        <setvar name="I" value="I+1"/>
+        <if cnd="I&gt;4">
+          <newpage cnd="not(cu.bof)"/>
+          <setvar name="I" value="1"/>
+        </if>
+        <if cnd="1&gt;2">
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160)px; width:200px">$(I)</DIV>]]></out>
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160+16)px; width:200px">$(MID(cu.Addr1,1,40))</DIV>]]></out>
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160+32)px; width:200px">$(MID(cu.Addr1,41,20))</DIV>]]></out>
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160+48)px; width:200px"><b>$(cu.cname)</b></DIV>]]></out>
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160+64)px; width:200px">1234567890</DIV>]]></out>
+          <out><![CDATA[<DIV STYLE="left:0px; top:$((I-1)*160+80)px; width:200px">1234567890</DIV>]]></out>
+        </if>
+        <table>
+          <tr>
+            <td width="30">$nbsp</td>
+            <td width="300">$(cu.Zip)</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>$(cu.Addr1)</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><p>&#160;</p></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><b>$(cu.cname)</b></td>
+          </tr>
+          <if cnd="cu.contact&lt;&gt;''">
+            <tr>
+              <td></td>
+              <td>$(cu.contact)&#160;&#160;&#160;&#160;</td>
+            </tr>
+          </if>
+          <if cnd="cu.contact=''">
+            <tr>
+            <td></td>
+            <td>採購人員&#160;&#160;&#160;&#160;</td>
+            </tr>
+          </if>
+        </table>
+        <if cnd="I&lt;4">
+          <out><![CDATA[<table border="0" width="100%"><tr><td height="$SS"></td></tr></table>]]></out>
+        </if>
+      </group>
+    </output>
+  </card>
+</wml>

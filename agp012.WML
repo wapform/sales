@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="big5"?>
+<wml>
+  <card id="P" title="應收對帳單列印">
+    <setvar name="PDATE" value="FORMAT('%4.4d',YEAR(DATE))+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <p>
+      請輸入列印範圍並放置80行報表紙<br/>
+      <br/>
+      <br/>
+      客戶代號:<input name="D" value="0000000000" size="14"/>
+      ～<input name="E" value="ZZZZZZZZZZ" size="14"/><br/>
+      <br/>
+      出貨日期:<input name="F" type="date" size="14"/>
+      ～<input name="G" type="date" size="14"/><br/>
+      <br/>
+      付款方式:<input name="J" value="代收" size="14"/><br/>
+      <br/>
+      輸出選擇:<input name="K" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (K='S','PRV','PRN'))" paper="Letter">
+    <dbtable tablename="sys">
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="Addr" displaylabel="公司地址"/>
+      <field fieldname="Phone" displaylabel="公司電話"/>
+      <field fieldname="Fax" displaylabel="公司傳真"/>
+    </dbtable>
+    <dbquery id="sh">
+    <![CDATA[
+    SELECT
+      sh.cno, sh.sno, sh.sdate, sh.TaxRate, sh.Amount, sh.Tax, sh.Paid, sh.Rem,
+      cu.cname, cu.Phone, cu.Fax, cu.Addr1
+    FROM
+      sh, cu
+    WHERE
+      (sh.sdate >= '$F') and (sh.sdate <= '$G')
+      and
+      sh.cno >= '$D' and sh.cno <= '$E'
+      and
+      cu.cno = sh.cno
+      and
+      cu.pay = '$J'
+    ORDER BY
+      sh.cno, sh.sdate, sh.sno
+    ]]>
+    </dbquery>
+
+    <output dataset="sh" dialog="cno;sno">
+      <group change="sh.cno">
+
+        <setvar name="PG" value="0"/>
+        <setvar name="LL" value="0"/>
+        <setvar name="AA" value="0"/>
+        <setvar name="BB" value="0"/>
+        <setvar name="CC" value="0"/>
+        <setvar name="DD" value="0"/>
+        <setvar name="EE" value="0"/>
+        <setvar name="FF" value="0"/>
+        <setvar name="GG" value="0"/>
+        <setvar name="NN" value="0"/>
+      
+        <page>
+          <out><![CDATA[<table width="740" align="center"><tr><td>]]></out>
+          <setvar name="PG" value="PG+1"/>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td>
+            </tr>
+            <tr>
+              <td colspan="3"><p align="center"><big>應收對帳單</big></p></td>
+            </tr>
+            <tr>
+              <td colspan="3">&#160;</td>
+            </tr>
+            <tr>
+              <td width="320">客戶:$(sh.cname)[$(sh.cno)]</td>
+              <td>電話:$(sh.Phone)</td>
+              <td width="105">頁數:$(PG)</td>
+            </tr>
+            <tr>
+              <td>地址:$(sh.Addr1)</td>
+              <td>傳真:$(sh.Fax)</td>
+              <td>日期:$(DATE)</td>
+            </tr>
+          </table>
+          <table class="p09" width="100%">
+            <tr>
+              <th width="90">出貨日期</th>
+              <th width="90">出貨單號</th>
+              <th width="90">合計金額</th>
+              <th width="90">營業稅額</th>
+              <th width="90">含稅合計</th>
+              <th width="90">已收金額</th>
+              <th width="90">未收金額</th>
+            </tr>
+
+            <group change="sh.sdate">
+
+            <group change="sh.sno">
+              <setvar name="X" value="0"/>
+              <setvar name="YN" value="'Y'"/>
+              <setvar name="BD" value="0"/>
+              <setvar name="BE" value="0"/>
+
+              <group>
+                <tr>
+                  <td><p align="center">$(sh.sdate)</p></td>
+                  <td><p align="center">$(sh.sno)</p></td>
+                  <td><p align="right">$(sh.amount)</p></td>
+                  <td><p align="right">$(sh.tax)</p></td>
+                  <td><p align="right">$(sh.amount+sh.tax)</p></td>
+                  <td><p align="right">$(sh.paid)</p></td>
+                  <td><p align="right">$(sh.amount+sh.tax-sh.paid)</p></td>
+                </tr>
+              </group>
+
+              <setvar name="AA" value="AA+sh.amount"/>
+              <setvar name="BB" value="BB+sh.tax"/>
+              <setvar name="CC" value="CC+sh.paid"/>
+
+            </group>
+            </group>
+          </table>
+        <out><![CDATA[</td></tr></table>]]></out>
+        </page>
+
+        <hr size="1" width="740" align="center"/>
+        
+    <dbquery id="R">
+    <![CDATA[
+    select cno, SUM(Amount) as A, SUM(Tax) as B, SUM(Paid) as C
+      from sh where sh.sdate < '$(F)' and cno='$sh.cno' group by cno
+    order by cno
+    ]]>
+    </dbquery>
+
+    <setvar name="LL" value="R.A+R.B-R.C"/>
+    <setvar name="NN" value="LL+AA+BB-CC"/>
+
+        <out><![CDATA[<table width="740" align="center"><tr><td>]]></out>
+
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td>公司地址:$(sys.Addr)</td>
+            <td width="100" align="right">上期未收:</td>
+            <td width="100" align="right">$(FORMAT('%8.0n',LL*1.0))</td>
+          </tr>
+          <tr>
+            <td>公司電話:$(sys.Phone)</td>
+            <td align="right">+本期銷貨:</td>
+            <td align="right">$(FORMAT('%8.0n',AA*1.0))</td>
+          </tr>
+          <tr>
+            <td>公司傳真:$(sys.Fax)</td>
+            <td align="right">+本期稅額:</td>
+            <td align="right">$(FORMAT('%8.0n',BB*1.0))</td>
+          </tr>
+          <tr>
+            <td><p>&#160;</p></td>
+            <td align="right">-本期已收:</td>
+            <td align="right">$(FORMAT('%8.0n',CC*1.0))</td>
+          </tr>
+          <tr>
+            <td><p>&#160;</p></td>
+            <td align="right">=本期應收:</td>
+            <td align="right">$(FORMAT('%8.0n',NN*1.0))</td>
+          </tr>
+        </table>
+
+        <out><![CDATA[</td></tr></table>]]></out>
+        
+      </group>
+    </output>
+  </card>
+</wml>

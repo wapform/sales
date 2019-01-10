@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="貨運統計表">
+    <setvar name="PDATE" value="FORMAT('%4.4d',YEAR(DATE))+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <p>
+      <br/>
+      請輸入列印範圍並放置80行報表紙<br/>
+      <br/>
+      貨運代號:<input name="D" value="1" size="14" lookup="fm;fno;fname"/><br/>
+      <br/>
+      出貨日期:<input name="F" type="date" size="14"/>
+      ～<input name="G" type="date" size="14"/><br/>
+<!--
+      出貨日期:<input name="F" value="$PDATE" size="12"/>
+      ～<input name="G" value="$PDATE" size="12"/><br/>
+-->
+      <br/>
+      付款方式:<input name="P" value="代收" size="12"/><br/>
+      <br/>
+      輸出選擇:<input name="SP" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>                                                           
+  <card id="P1" title="order" device="$(IF (SP='S','PRV','PRN'))" paper="Letter">
+    <dbtable tablename="sys">                
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+      <field fieldname="Rem" displaylabel="Rem"/>
+    </dbtable>
+    <dbquery id="sh">
+      <![CDATA[
+SELECT sh.fno, fm.fname, sh.gno, sh.fty, sh.cno, cu.cshort, cu.addr1, cu.phone, cu.pay,
+  sh.sno, sh.sdate, sh.rem, sh.amount+sh.tax amount
+FROM sh, fm, cu
+WHERE
+(sh.cno = cu.cno)
+  AND
+(sh.fno = fm.fno)
+  AND
+(sh.fno = '$D')
+  AND
+(sh.sdate >= '$F') AND (sh.sdate <= '$G')
+ORDER BY gno, sdate, sno
+      ]]>
+    </dbquery>
+    <output dataset="sh" dialog="sno" rows="66">
+      <setvar name="A" value="0"/>
+      <setvar name="B" value="0"/>
+      <page>
+        <setvar name="L" value="0"/>
+        <setvar name="I" value="0"/>
+        <![CDATA[<table width="760" align="center"><tr><td>]]>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td>
+          </tr>
+          <tr>
+            <td colspan="3"><p align="center"><big>貨運統計表</big></p></td>
+          </tr>
+          <tr>
+            <td>貨運代號:$(sh.fname)[$P]</td>
+            <td>&#160;</td>
+            <td width="105">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>出貨單號:$F～$G</td>
+            <td>&#160;</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table class="p08" width="100%">
+          <tr>
+            <th width="25">板號</th>
+            <th width="60">出貨日期</th>
+            <th width="60">出貨單號</th>
+            <th width="50">客戶簡稱</th>
+            <th width="220">地址</th>
+            <th width="90">電話</th>
+            <th width="30">件數</th>
+            <th width="40">金額</th>
+            <th width="10"><p>&#160;</p></th>
+            <th>備註</th>
+          </tr>
+          <group>
+            <if cnd="sh.pay=P">
+            <tr>
+              <td align="center">$sh.gno</td>
+              <td><p align="center">$sh.sdate</p></td>
+              <td align="center">$sh.sno</td>
+              <td align="center">$sh.cshort</td>
+              <td><small>$sh.addr1</small></td>
+              <td>$sh.phone</td>
+              <td><p align="center">$sh.fty</p></td>
+              <td><p align="right">$sh.amount</p></td>
+              <td><p>&#160;</p></td>
+              <td><small>$sh.rem</small></td>
+            </tr>
+            <setvar name="A" value="A+sh.fty"/>
+            <setvar name="B" value="B+sh.amount"/>
+            </if>
+          </group>
+          <if cnd="sh.eof">
+            <tr>
+              <td><p align="center"><b>總計</b></p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="center"><b>$A</b></p></td>
+              <td><p align="right"><b>$B</b></p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+          </if>
+        </table>
+        <![CDATA[</td></tr></table>]]>
+      </page>
+    </output>
+  </card>
+</wml>

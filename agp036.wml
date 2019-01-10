@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="客戶資料表">
+    <dbtable tablename="sys">
+      <field fieldname="No" displaylabel="控制鍵"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <p>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        <br/>
+        客戶代號:<input name="C" value="100-000" size="10" lookup="cu;cno;cshort"/>
+        ～<input name="D" value="100-999" size="10" lookup="cu;cno;cshort"/><br/>
+        <br/>
+        輸出選擇:<input name="E" value="S" size="1"/>
+        (S.螢幕P.列表機)
+    </p>
+    <do type="reset" label="重置">
+      <refresh>
+        <setvar name="C" value="00000"/>
+        <setvar name="D" value="99999"/>
+      </refresh>
+    </do>
+    <do type="accept" label="列印">
+      <go href="agp036a.wml" method="post">
+        <postfield name="i" value="2"/>
+        <postfield name="j" value="30"/>
+      </go>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

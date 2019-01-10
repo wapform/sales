@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="客戶資料建檔">
+    <dbtable tablename="cu" indexfieldnames="cno">
+      <field fieldname="Cno" displaylabel="客戶代號"/>
+      <field fieldname="Cname" displaylabel="客戶名稱"/>
+      <field fieldname="Cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Ziq" displaylabel="貨運區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Email" displaylabel="電子郵件"/>    
+      <field fieldname="Password" displaylabel="密碼"/>    
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+      <field fieldname="Level" displaylabel="等級"/>
+      <field fieldname="Pay" displaylabel="付款"/>
+      <field fieldname="AType" displaylabel="發票聯式"/>
+      <field fieldname="Capital" displaylabel="資本額"/>
+      <field fieldname="CDate" displaylabel="建檔日期"/>
+      <field fieldname="Rem" displaylabel="客戶備註"/>
+      <field fieldname="Remark" displaylabel="公司備註"/>
+    </dbtable>
+    <p>
+      <datasource dataset="cu">
+        <navigator/>
+        <br/>
+        <dbgrid width="960" height="500" multiselect="true">
+          <item field="Cno" size="8"/>
+          <item field="CDate" size="10"/>
+          <item field="Pay" size="8"/>
+          <item field="AType" size="6"/>
+          <item field="Cname" size="40"/>
+          <item field="Cshort" size="8"/>
+          <item field="Phone" size="20"/>
+          <item field="Contact" size="10"/>
+          <item field="Addr1" size="60"/>
+          <item field="Addr2" size="60"/>
+          <item field="AC" size="8"/>
+          <item field="Zip" size="8"/>
+          <item field="Ziq" size="8"/>
+          <item field="FAX" size="15"/>
+          <item field="GSM" size="15"/>
+          <item field="Email" size="30"/>         
+          <item field="Password" size="40"/>         
+          <item field="Charger" size="10"/>
+          <item field="Capital" size="12"/>
+          <item field="Rem" size="40"/>
+          <item field="Remark" size="40"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="accept" label="標籤">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="PRV" paper="Letter">
+    <output dataset="cu" dialog="CNo">
+      <setvar name="I" value="0"/>
+      <group>
+        <setvar name="I" value="I+1"/>
+        <if cnd="I>4">
+          <newpage cnd="not(cu.bof)"/>
+          <setvar name="I" value="1"/>
+        </if>
+        <table>
+          <tr><td>$(cu.Zip)</td></tr>
+          <tr><td>$(cu.Addr1)</td></tr>
+          <tr><td height="16"></td></tr>
+          <tr><td><b>$(cu.cname)</b></td></tr>
+          <if cnd="cu.contact&lt;&gt;''"><tr><td>$(cu.contact)&#160;&#160;&#160;啟</td></tr></if>
+          <if cnd="cu.contact=''"><tr><td>採購人員&#160;&#160;&#160;啟</td></tr></if>
+        </table>
+        <if cnd="I&lt;4">
+        <out><![CDATA[<table border="0" width="100%"><tr><td height="36"></td></tr></table>]]></out>
+        </if>
+      </group>
+    </output>
+  </card>
+</wml>

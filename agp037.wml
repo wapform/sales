@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="貨運資料建檔">
+    <dbtable tablename="fm">
+      <field fieldname="fno" displaylabel="貨運代號"/>
+      <field fieldname="fname" displaylabel="貨運姓名"/>
+    </dbtable>
+    <datasource dataset="fm">
+      <p align="center">
+        <navigator/>
+      </p>
+        <dbgrid width="600" height="300">
+          <item field="fno" size="6"/>
+          <item field="fname" size="8"/>
+        </dbgrid>
+    </datasource>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="系統目錄建檔">
+    <dbtable tablename="web">
+      <field fieldname="id"/>
+      <field fieldname="sub"/>
+      <field fieldname="title" displaylabel="主題"/>
+      <field fieldname="href" displaylabel="超連結"/>
+      <field fieldname="txt" displaylabel="內容"/>
+    </dbtable>
+    <p>
+      <datasource dataset="web">
+        <navigator/>
+        <dbgrid width="600" height="450">
+          <item field="id" size="3"/>
+          <item field="sub" size="3"/>
+          <item field="title" size="30"/>
+          <item field="href" size="30"/>
+          <item field="txt"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

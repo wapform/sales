@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="廠商資料建檔">
+    <dbquery id="ve" tablename="mybom"><![CDATA[select * from ve order by vno]]>
+      <field fieldname="Vno" displaylabel="廠商代號"/>
+      <field fieldname="Vname" displaylabel="廠商名稱"/>
+      <field fieldname="Vshort" displaylabel="廠商簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+    </dbquery>
+    <p>
+      <datasource dataset="ve">
+        <navigator/>
+        <br/>
+        <dbgrid width="750" height="420" entertotab="false" multiselect="true">
+          <item field="Vno" size="10"/>
+          <item field="Vname" size="30"/>
+          <item field="Vshort" size="8"/>
+          <item field="Addr1" size="40"/>
+          <item field="Addr2" size="40"/>
+          <item field="AC" size="10"/>
+          <item field="Zip" size="10"/>
+          <item field="Phone" size="15"/>
+          <item field="FAX" size="15"/>
+          <item field="GSM" size="15"/>
+          <item field="Charger" size="10"/>
+          <item field="Contact" size="10"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

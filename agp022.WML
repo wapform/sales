@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="訂貨單">
+    <setvar name="PDATE" value="FORMAT('%4.4d',YEAR(DATE))+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <p>
+        <br/>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        客戶代號:<input name="D" value="337-023" size="14" lookup="cu;cno;cshort"/>
+        <br/>
+        <br/>
+        出貨日期:<input name="F" type="date" size="14"/>
+        ～<input name="G" type="date" size="14"/><br/>
+        <br/>
+        輸出選擇:<input name="H" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="order" device="PRV" paper="Letter">
+    <dbtable tablename="sys">              
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+      <field fieldname="Rem" displaylabel="Rem"/>
+    </dbtable>
+    <dbquery id="od">
+    <![CDATA[
+SELECT pa.pno, pa.Sub, pa.Des, pa.unit, pa.price1, sh.cno, sn.price,
+  cu.cname, cu.ac, cu.phone, cu.fax, cu.addr1, cu.contact, cu.email
+FROM sh, sn, cu, pa
+WHERE
+(sh.sno = sn.sno)
+  AND
+(sh.cno = cu.cno)
+  AND
+(sh.Cno = '$D')
+  AND
+(sh.sdate >= '$F') AND (sh.sdate <= '$G')
+  AND (pa.Pno = sn.Pno)
+ORDER BY pa.Sub, sn.Pno, sh.sdate
+    ]]>
+    </dbquery>
+    <output dataset="od" dialog="pno" rows="27">
+      <page>
+        <setvar name="L" value="0"/>
+        <setvar name="I" value="0"/>
+        <out><![CDATA[<table width="700" align="center"><tr><td>]]></out>
+        <p align="center"><big><b>$sys.company<br/><u>訂貨單</u></b></big></p>
+        <table border="1" cellpadding="4" cellspacing="0" width="100%">
+          <tr>
+            <td width="15%" align="center">公司名稱</td>
+            <td width="35%">&#160;$od.cname</td>
+            <td width="15%" align="center">統一編號</td>
+            <td width="35%">&#160;$od.ac</td>
+          </tr>
+          <tr>
+            <td align="center">聯絡電話</td>
+            <td>&#160;$od.phone</td>
+            <td align="center">傳真</td>
+            <td>&#160;$od.fax</td>
+          </tr>
+          <tr>
+            <td align="center">訂購聯絡人</td>
+            <td>&#160;$od.contact</td>
+            <td align="center">電子郵件</td>
+            <td>&#160;$od.email</td>
+          </tr>
+          <tr>
+            <td align="center">送貨地址</td>
+            <td colspan="3">&#160;$od.addr1</td>
+          </tr>
+        </table>
+        <br/>
+        <table border="1" cellpadding="4" cellspacing="0" width="100%">
+          <tr>
+            <th width="63">類別</th>
+            <th width="90">產品編號</th>
+            <th>產品名稱</th>
+            <th width="50">單位</th>
+            <th width="70">標準售價</th>
+            <th width="50">單價</th>
+            <th width="70">訂購數量</th>
+            <th width="90">金額</th>
+          </tr>
+          <group change="od.sub">
+          <setvar name="I" value="0"/>
+          <group change="od.pno">
+          <group>
+          </group>
+            <tr>
+              <td><p align="center">$(IF(I=0,od.sub,nbsp))</p></td>
+              <td>$(od.pno)</td>
+              <td>$(od.des)</td>
+              <td><p align="center">$(od.unit)</p></td>
+              <td><p align="right">$(od.price1)</p></td>
+              <td><p align="right">$(od.price)</p></td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+            </tr>
+            <setvar name="L" value="L+1"/>
+            <setvar name="I" value="I+1"/>
+          </group>
+          </group>
+          <while cnd="L&lt;=20">
+            <tr>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+            </tr>
+            <setvar name="L" value="L+1"/>
+          </while>
+        </table>
+        <p>$sys.rem</p>
+        <out><![CDATA[</td></tr></table>]]></out>
+      </page>
+    </output>
+  </card>
+  <card id="PC" title="客戶資料建檔">
+    <dbtable tablename="cu" filter="cno&lt;'A'">
+      <field fieldname="Cno" displaylabel="客戶代號"/>
+      <field fieldname="Cname" displaylabel="客戶名稱"/>
+      <field fieldname="Cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+    </dbtable>
+    <call name="cu" method="locate" params="'cno';D"/>
+    <p>
+      <datasource dataset="cu">
+        <navigator/>
+        <br/>
+        <dbgrid width="750" height="420" entertotab="false" multiselect="true">
+          <item field="Cno" size="8"/>
+          <item field="Cname" size="30"/>
+          <item field="Cshort" size="8"/>
+          <item field="Addr1" size="60"/>
+          <item field="Addr2" size="60"/>
+          <item field="AC" size="8"/>
+          <item field="Zip" size="8"/>
+          <item field="Phone" size="15"/>
+          <item field="FAX" size="15"/>
+          <item field="GSM" size="15"/>
+          <item field="Charger" size="10"/>
+          <item field="Contact" size="10"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="accept" label="確定">
+      <prev>
+        <setvar name="D" value="cu.cno"/>
+      </prev>
+    </do>
+    <do type="accept" label="取消">
+      <prev/>
+    </do>
+  </card>
+</wml>

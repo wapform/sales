@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="收款單建檔">
+    <setvar name="TDATE" value="FORMAT('%2.2d',YEAR(DATE)-1911)+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+
+    <dbtable tablename="sys" keyfields="1" lookupkeyfields="1">
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+    </dbtable>
+
+    <dbtable tablename="xn" mastersource="xh">
+      <field fieldname="xNo" displaylabel="收款單號"/>
+      <field fieldname="xDate" displaylabel="收款日期"/>
+      <field fieldname="CNo" displaylabel="客戶代號"/>
+      <dbtable tablename="cu" keyfields="cno" lookupkeyfields="cno">
+        <field fieldname="cshort" displaylabel="客戶簡稱"/>
+      </dbtable>
+      <field fieldname="Cash" displaylabel="本期收現"/>
+      <field fieldname="Chk" displaylabel="本期收票"/>
+      <field fieldname="Conver" displaylabel="本期折讓"/>
+      <field fieldname="Discount" displaylabel="本期折扣"/>
+      <field fieldname="Adjust" displaylabel="本期調整"/>
+      <field fieldname="PayDate" displaylabel="到期日"/>
+      <field fieldname="ChkNo" displaylabel="支票號碼"/>
+      <field fieldname="BNo" displaylabel="銀行代號"/>
+      <dbtable tablename="bk" keyfields="BNo" lookupkeyfields="BNo">
+        <field fieldname="BName" displaylabel="銀行名稱"/>
+      </dbtable>
+      <field fieldname="Account" displaylabel="帳號"/>
+      <field fieldname="Rem" displaylabel="備註"/>
+      <onevent type="onnewrecord">
+        <insert name="num" into="date" values="$tdate"/>
+        <dbquery><![CDATA[update num set xno=xno+1 where date='$tdate']]></dbquery>
+        <dbquery id="maxno"><![CDATA[select xno from num where date='$tdate']]></dbquery>
+        <setvar name="xnxno" value="TDATE+FORMAT('%4.4d',maxno.xno)"/>
+        <setvar name="xnXdate" value="TDATE"/>
+        <call name="sh" method="Post"/>
+      </onevent>
+    </dbtable>
+
+      <datasource dataset="xn">
+        <navigator/>
+        <dbgrid width="750" height="450">
+          <item field="Xno" size="11"/>
+          <item field="xdate" size="6"/>
+          <item field="cno" size="12" lookup="cu;cno;cshort"/>
+          <item field="cshort" size="8"/>
+          <item field="Cash" size="11"/>
+          <item field="Chk" size="11"/>
+          <item field="Conver" size="11"/>
+          <item field="Discount" size="11"/>
+          <item field="Adjust" size="11"/>
+          <item field="PayDate" size="8"/>
+          <item field="ChkNo" size="10"/>
+          <item field="BNo" size="3" lookup="bk;bno;bname"/>
+          <item field="BName" size="12"/>
+          <item field="Account" size="10"/>
+          <item field="Rem" size="20"/>
+        </dbgrid>
+      </datasource>
+
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>

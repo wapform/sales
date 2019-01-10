@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="轉入客戶資料9;20;42;91;104">
+    <p>
+      檔&nbsp;&nbsp;名:<input name="A" value="E:\BOOKS\03\台北市.TXT" size="30"/><br/>
+      代&nbsp;&nbsp;碼:<input name="C" value="G" size="1"/><br/>
+      資本額:<input name="B" value="1000000" size="30"/><br/>
+    </p>
+    <do type="accept" label="執行">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(A)" paper="import">
+    <dbtable tablename="cu">
+      <field fieldname="Cno" displaylabel="客戶代號"/>
+      <field fieldname="Cname" displaylabel="客戶名稱"/>
+      <field fieldname="CShort" displaylabel="客戶簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+      <field fieldname="Capital" displaylabel="Capital"/>
+    </dbtable>
+    <dbtable tablename="zp">
+      <field fieldname="No" displaylabel="No"/>
+      <field fieldname="City" displaylabel="市"/>
+      <field fieldname="Area" displaylabel="區"/>
+      <field fieldname="Sno" displaylabel="Sno"/>
+    </dbtable>
+    <output dataset="cu" dialog="Cno" rows="60">
+      <setvar name="I" value="0"/>
+      <setvar name="S" value="''"/>
+      <group>
+        <import>
+          <item field="CName" pos="20" size="22" format="22"/>
+          <item field="Charger" pos="91" size="8" format="8"/>
+          <item field="Ac" pos="9" size="8" format="8"/>
+          <item field="Addr1" pos="42" size="46" format="46"/>
+          <item field="Capital" pos="104" size="11" format="11"/>
+        </import>
+        <call name="zp" method="First"/>
+        <while cnd="NOT(zp.EOF)">
+          <setvar name="S" value="zp.City" cnd="zp.City&lt;&gt;''"/>
+          <if cnd="(INSTR (cu.Addr1,S)>0) AND (INSTR (cu.Addr1,zp.area)>0)">
+            <setvar name="cuZip" value="zp.no"/>
+            <break/>
+          </if>
+          <call name="zp" method="Next"/>
+        </while>
+        <setvar name="zpSno" value="zpSno+1"/>
+        <bug>xyz</bug>
+        <setvar name="cuCno" value="C+zp.No+'-'+FORMAT('%3.3d',zp.Sno)"/>
+        <setvar name="cuCshort" value="MID(cu.cname,1,8)"/>
+        <setvar name="I" value="POS('（',cuAddr1)"/>
+        <setvar name="cuAddr1" value="MID(cuAddr1,1,I-1)" cnd="I>0"/>
+        <if cnd="cu.Capital&lt;B">
+          <call name="cu" method="Cancel"/>
+          <call name="zp" method="Cancel"/>
+        </if>
+      </group>
+    </output>
+  </card>
+</wml>

@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="程式目錄" device="PRV">
+
+    <out><![CDATA[<table border="0" width="760" height="100%" align="center"><tr><td height="20">]]></out>
+
+    <br/><p align="center"><big><b><a href="">事物通文具百貨有限公司</a></b></big></p>
+
+    <out><![CDATA[
+    <table cellpadding=0 cellspacing=5 border=0 width=100%>
+    <tr align=center valign=top>
+<td rowspan=2 width=5%><spacer type=block width=1 height=1></td>
+<td>
+  <a href="agp010.wml?sid=電腦週邊"><img src="images/GC.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=20"><font size=2>CD/DVD</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=文書檔案類"><img src="images/GF.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=26"><font size=2>MiniDV</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=筆類"><img src="images/GK.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=35"><font size=2>Ink</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=百貨類"><img src="images/GM.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=38"><font size=2>文具用品</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=辦公事務"><img src="images/GP.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=46"><font size=2>列表機</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=事務機器"><img src="images/GR.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=56"><font size=2>MP3</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=計算機類"><img src="images/GUM.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=65"><font size=2>Mouse</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=修正用品"><img src="images/GV.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=73"><font size=2>Tools</font></a>
+</td>
+<td>
+  <a href="agp010.wml?sid=商業用紙"><img src="images/GY.gif" border="0"></a><br>
+  <a href="agp010.wml?sid=20"><font size=2>JoyPad</font></a>
+</td>
+<td rowspan=2 width=5%><spacer type=block width=1 height=1></td>
+    </tr>
+    </table>
+    ]]></out>
+
+    <if cnd="1>2">
+    <dbquery id="gp">
+    <![CDATA[select distinct sub from pa]]>
+    </dbquery>
+    <p align="center">
+    <while cnd="NOT(gp.EOF)">
+      <if cnd="not(gp.bof)"><out><![CDATA[|]]></out></if>
+      <a href="agp010.wml?sid=$gp.sub">$gp.sub</a>
+      <call name="gp" method="Next"/>
+    </while>
+    </p>
+    </if>
+
+    <out><![CDATA[</td></tr><tr><td valign="top">]]></out>
+
+    <dbquery id="pa">
+    <![CDATA[select pno, des, unit, pr from pa where sub = '$request.sid' order by sub]]>
+    </dbquery>
+    <setvar name="I" value="0"/>
+    <out><![CDATA[<table border="0" width="100%"><tr>]]></out>
+    <call name="pa" method="First"/>
+    <while cnd="NOT(pa.EOF)">
+      <setvar name="I" value="I+1"/>
+      <if cnd="I&gt;5">
+        <out><![CDATA[</tr><tr>]]></out>
+        <setvar name="I" value="1"/>
+      </if>
+      <td width="150" align="center">
+        <out><![CDATA[
+<a href='javascript:void(0)' onclick="window.open('detail.wml?id=$pa.pno',
+  'CoverWindow','toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=400,height=320')">
+<img src="images/xyz.jpg" alt="$pa.des" style="border-width:0px;"/></a><br>
+        <b>$(MID(pa.des,1,16))</b><br/>
+        ]]></out>
+        <table border="1" cellpadding="0" cellspacing="0">
+          <tr class="row">
+            <th>產品編號</th>
+            <th>市價</th>
+            <th>單位</th>
+          </tr>
+          <tr>
+            <td align="center">$pa.pno</td>
+            <td align="center">$pa.pr</td>
+            <td align="center">$pa.unit</td>
+          </tr>
+        </table>
+      </td>
+      <call name="pa" method="Next"/>
+    </while>
+    <while cnd="I&lt;5">
+      <setvar name="I" value="I+1"/>
+      <td width="150" align="center">&nbsp;</td>
+    </while>
+    <out><![CDATA[</tr></table>]]></out>
+    <out><![CDATA[</td></tr><tr><td height="60"><p align="center">系統設計:敏弘資訊</p></td></tr></table>]]></out>
+  </card>
+</wml>

@@ -1,0 +1,213 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="消費分析表">
+    <p>
+        <br/>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        客戶代號:<input name="D" value="407-000" size="14" lookup="cu;cno;cshort"/>
+        ～<input name="E" value="407-999" size="14" lookup="cu;cno;cshort"/><br/>
+        <br/>
+        交易日起:<input name="F" type="date" size="14"/><br/>
+        <br/>
+        資.本.額:<input name="X" value="5000" size="14"/><br/>
+        <br/>
+        交易金額:<input name="Y" value="1000" size="14"/><br/>
+        <br/>
+        交易次數:<input name="ZA" value="1" size="3"/>
+        ～<input name="ZB" value="999" size="3"/><br/>
+        <br/>
+        明細合計:<input name="DS" value="D" size="1"/>(D.明細S.合計)<br/>
+        <br/>
+        輸出選擇:<input name="SP" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (SP='S','PRV','PRN'))" paper="Letter">
+    <setvar name="BL" value="0"/>
+    <dbtable tablename="sys">                               
+      <field fieldname="No" displaylabel="控制鍵"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <dbquery id="cu">
+    <![CDATA[
+select cu.cno, cu.cname, cu.phone, cu.fax, cu.ac, cu.zip, cu.addr1, cu.addr2, cu.contact, cu.capital,
+  sum(sh.amount) as amount, count(sh.sno) as qty from cu
+left join sh on sh.cno=cu.cno
+where (cu.cno>='$D') and (cu.cno<='$E') and (sh.sdate>='$F')
+group by cu.cno
+order by cu.cno
+    ]]>
+    </dbquery>
+    <output dataset="cu" dialog="CNo">
+      <page>
+        <![CDATA[<table width="760" align="center"><tr><td>]]>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>消費分析表</big></p></td></tr>
+          <tr>
+            <td>客戶代號:$(D)～$(E)</td>
+            <td><p>&#160;</p></td>
+            <td><p>&#160;</p></td>
+          </tr>
+          <tr>
+            <td>出貨日起:$(F)</td>
+            <td>交易金額:$Y</td>
+            <td width="105">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>資.本.額:$X</td>
+            <td>交易次數:$ZA～$ZB</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table class="p08" width="100%" rows="60">
+          <tr>
+            <th width="60">日期</th>
+            <th width="70">單號</th>
+            <th width="60">貨號</th>
+            <th width="220">品名規格</th>
+            <th width="50">數量</th>
+            <th width="50">單價</th>
+            <th width="60">金額</th>
+            <th>備註</th>
+          </tr>
+          <group>
+            <if cnd="(cu.capital&gt;=X) and (cu.amount&gt;=Y) and (cu.qty&gt;=ZA) and (cu.qty&lt;=ZB)">
+              <go href="#P2"/>
+            </if>
+          </group>
+          <if cnd="cu.eof">
+            <tr>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><big><b><u>$(FORMAT('%7.0n',BL*1.0))</u></b></big></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+            <tr>
+              <td colspan="8"><p>&#160;</p></td>
+            </tr>
+          </if>
+        </table>
+      <![CDATA[</td></tr></table>]]>
+      </page>
+      <p align="center">$sys.design</p>
+    </output>
+  </card>
+  <card id="P2" title="資料列印" device="SUB">
+    <setvar name="BG" value="0"/>
+    <setvar name="BH" value="0"/>
+    <setvar name="BI" value="0"/>
+    <setvar name="BJ" value="0"/>
+    <setvar name="BK" value="0"/>
+    <setvar name="BM" value="''"/>
+    <setvar name="BN" value="0"/>
+    <dbquery id="sn">
+    <![CDATA[
+    SELECT
+      sh.CNo, cu.CShort, cu.phone, cu.addr1, cu.contact, sh.SDate, sh.SNo, sh.ENo, em.EName, sn.pno, pa.des,
+      sn.Qty, sn.Price, sn.Qty*sn.Price BC, sn.Rem
+    FROM
+      sh, sn, em, cu, pa
+    WHERE
+      sh.CNo = '$cu.cno'
+      and
+      sh.SDate >= '$F'
+      and
+      sh.SNo = sn.SNo
+      and
+      em.ENo = sh.ENo
+      and
+      cu.CNo = sh.CNo
+      and
+      pa.pno = sn.pno
+    ORDER BY
+      sh.CNo, sh.SDate, sh.SNo
+    ]]>
+    </dbquery>
+    <output dataset="sn" rows="58">
+          <group change="sn.CNo">
+            <setvar name="BG" value="0"/>
+            <setvar name="BH" value="0"/>
+            <setvar name="BI" value="0"/>
+            <setvar name="BJ" value="0"/>
+            <setvar name="BK" value="0"/>
+    <dbquery id="TT">
+    <![CDATA[select count(*) as CT from sh where cno='$sn.cno' and sdate >= '$F']]>
+    </dbquery>
+            <tr><td colspan="8">客戶:$sn.cshort[$sn.cno]/業務員:$sn.ename/電話:$sn.phone/地址:$sn.addr1/聯絡人:$sn.contact/筆數:$tt.ct</td></tr>
+          <group change="sn.sno">
+            <setvar name="I" value="0"/>
+            <setvar name="BM" value="'N'"/>
+            <setvar name="BN" value="0"/>
+            <group>
+              <if cnd="DS='D'">
+              <if cnd="BM='N'">
+                <tr>
+                  <td>$(sn.SDate)</td>
+                  <td>$(sn.SNo)</td>
+                  <td>$(sn.pno)</td>
+                  <td>$(sn.des)</td>
+                  <td><p align="right">$(sn.Qty)</p></td>
+                  <td><p align="right">$(sn.Price)</p></td>
+                  <td><p align="right">$(FORMAT('%7.0n',sn.BC*1.0))</p></td>
+                  <td>&#160;$(sn.Rem)</td>
+                </tr>
+              </if>
+              <if cnd="BM='Y'">
+                <tr>
+                  <td><p>&#160;</p></td>
+                  <td><p>&#160;</p></td>
+                  <td>$(sn.pno)</td>
+                  <td>$(sn.des)</td>
+                  <td><p align="right">$(sn.Qty)</p></td>
+                  <td><p align="right">$(sn.Price)</p></td>
+                  <td><p align="right">$(FORMAT('%7.0n',sn.BC*1.0))</p></td>
+                  <td>&#160;$(sn.Rem)</td>
+                </tr>
+              </if>
+              </if>
+              <setvar name="I" value="I+1"/>
+              <setvar name="BM" value="'Y'"/>
+              <setvar name="BK" value="BK+sn.BC"/>
+              <setvar name="BL" value="BL+sn.BC"/>
+              <setvar name="BN" value="BN+sn.BC"/>
+            </group>
+            <tr>
+              <td><p><b>$(sn.SDate)</b></p></td>
+              <td><p><b>$(sn.SNo)</b></p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><b>$(FORMAT('%7.0n',BN*1.0))</b></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+          </group>
+            <tr>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p align="right"><b><u>$(FORMAT('%7.0n',BK*1.0))</u></b></p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+            <tr>
+              <td colspan="8"><p>&#160;</p></td>
+            </tr>
+          </group>
+    </output>
+  </card>
+</wml>

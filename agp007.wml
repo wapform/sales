@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="big5"?>
+<wml>
+  <card id="P" title="客戶資料表">
+<p><br/>請輸入列印範圍並放置80行報表紙<br/><br/>客戶代號:<input name="C" value="100-000" size="10"/>～<input name="D" value="200-999" size="10"/><br/><br/>輸出選擇:<input name="E" value="S" size="1"/>(S.螢幕P.列表機)</p>
+    <do type="reset" label="重置">
+      <refresh>
+        <setvar name="C" value="00000"/>
+        <setvar name="D" value="99999"/>
+      </refresh>                                                                
+    </do>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF (E='S','PRV','PRN'))" printer="pdfFactory Pro" paper="Letter">
+    <setvar name="I" value="0"/>
+    <dbtable tablename="sys">         
+      <field fieldname="No" displaylabel="控制鍵"/>
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <dbquery id="cu"><![CDATA[select * from cu where (cno>='$C') and (cno<='$D')]]></dbquery>
+    <output dataset="cu" dialog="CNo" rows="50">
+      <page>
+        <setvar name="I" value="1"/>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>$(ANSI('客戶資料表'))</big></p></td></tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td width="100">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>客戶代號:$(C)～$(D)</td>
+            <td></td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+<!--
+      <p>$PrintMarginLeft</p>
+      <p>$PrintMarginTop</p>
+      <p>$PrintMarginRight</p>
+      <p>$PrintMarginBottom</p>
+-->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" align="center">
+          <tr class="row">
+            <th width="63">客戶代號</th>
+            <th width="217">客戶名稱</th>
+            <th width="105">傳真</th>
+            <th width="63">聯絡人</th>
+            <th>發票地址</th>
+          </tr>
+          <tr class="row">
+            <th></th>
+            <th>電話</th>
+            <th></th>
+            <th>統一編號</th>
+            <th>公司地址</th>
+          </tr>
+          <group>
+            <tr class="$(IF(I mod 2 = 1, 'row1', 'row2'))">
+              <td>$(cu.CNo)</td>
+              <td>$(cu.CName)</td>
+              <td>$(cu.Fax)</td>
+              <td>$(cu.Contact)</td>
+              <td>$(cu.Addr1)</td>
+            </tr>
+            <tr class="$(IF(I mod 2 = 1, 'row1', 'row2'))">
+              <td></td>
+              <td>$(cu.Phone)</td>
+              <td>&#160;</td>
+              <td>$(cu.Ac)</td>
+              <td>$(cu.Addr2)</td>
+            </tr>
+            <setvar name="I" value="I+1"/>
+          </group>
+        </table>
+      </page>
+      <p align="center">$sys.design</p>
+    </output>
+  </card>
+</wml>

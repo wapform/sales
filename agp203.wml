@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<wml>
+  <card id="P" title="查貨詢價清單列印(查貨用)">
+    <setvar name="TDATE" value="FORMAT('%3.3d',YEAR(DATE)-1911)+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <setvar name="PDATE" value="FORMAT('%4.4d',YEAR(DATE))+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <p>
+        <br/>
+        請輸入列印範圍並放置80行報表紙<br/>
+        <br/>
+        廠商代號:<input name="C" value="001" lookup="ve;vno;vname" size="14"/>
+        ～<input name="D" value="999" lookup="ve;vno;vname" size="14"/><br/>
+        <br/>
+        類別代號:<input name="E" value="0000" lookup="sql;sub;select distinct sid from pa" size="14"/>
+        ～<input name="F" value="9999" lookup="sql;sub;select distinct sid from pae" size="14"/><br/>
+        <br/>
+        啟用狀態:<input name="G" value="2" size="1"/>(0.未啟用1.啟用2.全部)<br/>
+        <br/>
+        輸出選擇:<input name="SP" value="S" size="1"/>(S.螢幕P.列表機)<br/>
+    </p>
+    <do type="accept" label="列印">
+      <go href="#P1"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="資料列印" device="$(IF(SP='S','PRV','PRN'))" paper="Letter">
+    <setvar name="AX" value="0"/>
+    <setvar name="AY" value="0"/>
+    <setvar name="AZ" value="0"/>
+    <setvar name="BX" value="0"/>
+    <setvar name="BY" value="0"/>
+    <setvar name="BZ" value="0"/>
+    <setvar name="BD" value="''"/>
+    <dbtable tablename="sys">            
+      <field fieldname="Company" displaylabel="公司名稱"/>
+      <field fieldname="design" displaylabel="系統設計"/>
+    </dbtable>
+    <setvar name="S" value="''"/>
+    <setvar name="S" value="'and pa.active = $G'" cnd="G&lt;2"/>
+    <dbquery id="pa">
+    <![CDATA[
+    SELECT
+      pa.Pno, pa.Qno, pa.UDate, pa.sid, pa.gid, pa.vno, ve.vshort, pa.Des, pa.Unit, pa.Active,
+      pa.pricea, pa.priceb, pa.pricec, pa.price1, pa.price2, pa.price3, pa.barcode,
+      ve.vname, aaa.title sub, bbb.title grp
+    FROM pa, ve, web aaa, web bbb
+    WHERE
+      pa.vno >= '$C' and pa.vno <= '$D'
+      and
+      pa.sid >= '$E' and pa.sid <= '$F'
+      $(S)
+      and pa.vno=ve.vno
+      and pa.sid=aaa.id
+      and pa.gid=bbb.id
+    ORDER BY
+      pa.pno
+    ]]>
+    </dbquery>
+    <output dataset="pa" dialog="pno" rows="80">
+      <setvar name="BC" value="0"/>
+      <page>
+        <![CDATA[<table width="760" align="center"><tr><td>]]>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr><td colspan="3"><p align="center"><big>$(sys.Company)</big></p></td></tr>
+          <tr><td colspan="3"><p align="center"><big>查貨詢價清單列印(查貨用)</big></p></td></tr>
+          <tr>
+            <td>廠商代號:$(C)～$(D)</td>
+            <td>&#160;</td>
+            <td>&#160;</td>
+          </tr>
+          <tr>
+            <td>類別代號:$(E)～$(F)</td>
+            <td>&#160;</td>
+            <td width="105">頁數:$(PAGE)</td>
+          </tr>
+          <tr>
+            <td>啟用狀態:$G</td>
+            <td>&#160;</td>
+            <td>日期:$(DATE)</td>
+          </tr>
+        </table>
+        <table class="p06" width="100%">
+          <tr>
+            <th width="30">廠商代號</th>
+            <th width="80">廠商簡稱</th>
+            <th width="30">細類</th>
+            <th width="140">細類</th>
+            <th width="20">啟用</th>
+            <th width="60">貨號</th>
+            <th width="200">品名規格</th>
+            <th width="20">單位</th>
+            <th width="20">最近進價</th>
+            <th width="20">市價</th>
+            <th width="20">事售價</th>
+            <th width="20">售價三</th>
+            <th width="5"></th>
+            <th width="200">條碼</th>
+          </tr>
+          <group change="pa.vno">
+            <setvar name="I" value="0"/>
+            <setvar name="AX" value="0"/>
+            <setvar name="AY" value="0"/>
+            <setvar name="AZ" value="0"/>
+            <setvar name="BD" value="'N'"/>
+            <group>
+              <if cnd="BD='N'">
+                <tr>
+                  <td>$(pa.vno)</td>
+                  <td>$(pa.vname)</td>
+                  <td>$(pa.gid)</td>
+                  <td>$(pa.grp)</td>
+                  <td align="center">$(pa.active)</td>
+                  <td>$(pa.pno)</td>
+                  <td>$(pa.des)</td>
+                  <td align="center">$(pa.unit)</td>
+                  <td align="right">$(pa.pricea)</td>
+                  <td align="right">$(pa.pricec)</td>
+                  <td align="right">$(pa.price1)</td>
+                  <td align="right">$(pa.price3)</td>
+                  <td><p>&#160;</p></td>
+                  <td>$(pa.Barcode)</td>
+                </tr>
+              </if>
+              <if cnd="BD='Y'">
+                <tr>
+                  <td><p>&#160;</p></td>
+                  <td><p>&#160;</p></td>
+                  <td>$(pa.gid)</td>
+                  <td>$(pa.grp)</td>
+                  <td align="center">$(pa.active)</td>
+                  <td>$(pa.pno)</td>
+                  <td>$(pa.des)</td>
+                  <td align="center">$(pa.unit)</td>
+                  <td align="right">$(pa.pricea)</td>
+                  <td align="right">$(pa.pricec)</td>
+                  <td align="right">$(pa.price1)</td>
+                  <td align="right">$(pa.price3)</td>
+                  <td><p>&#160;</p></td>
+                  <td>$(pa.Barcode)</td>
+                </tr>
+              </if>
+              <setvar name="BD" value="'Y'"/>
+            </group>
+            <tr>
+              <td><p>共$(I)筆</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+            <tr>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+              <td><p>&#160;</p></td>
+            </tr>
+          </group>
+        </table>
+        <out><![CDATA[</td></tr></table>]]></out>
+      <![CDATA[</td></tr></table>]]>
+      </page>
+    </output>
+  </card>
+</wml>

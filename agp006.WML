@@ -1,0 +1,1577 @@
+<?xml version="1.0" encoding="big5"?>
+<wml>
+  <card id="P" title="出貨單建檔">
+    <setvar name="PDATE" value="FORMAT('%2.2d',YEAR(DATE)-1911)+FORMAT('%2.2d',MONTH(DATE))+FORMAT('%2.2d',DAY(DATE))"/>
+    <setvar name="B" value="0"/>
+    <setvar name="DeletingItems" value="0"/>
+    <setvar name="BookMark" value="0"/>
+    <setvar name="BTN" value="0"/>
+
+    <setvar name="_KDRQ1" value="''"/>
+    <setvar name="_KDRQ2" value="''"/>
+    <setvar name="_STYLE1" value="''"/>
+    <setvar name="_STYLE2" value="''"/>
+    <setvar name="_STYLE3" value="''"/>
+    <setvar name="_STYLE5" value="''"/>
+    <setvar name="_STYLE6" value="''"/>
+    <setvar name="_STYLE7" value="''"/>
+    <setvar name="_STYLE8" value="''"/>
+    <setvar name="_STYLE9" value="''"/>
+    <setvar name="_STYLEA" value="''"/>
+    <setvar name="_STYLEB" value="''"/>
+    
+    <dbquery id="sys"><![CDATA[select * from sys]]></dbquery>
+
+    <dbquery name="cu1" tablename="cu" filter="cno&lt;'D'">
+      select * from cu where cno&lt;'D' order by cno
+      <field fieldname="Cno" displaylabel="客戶代號"/>
+      <field fieldname="Cname" displaylabel="客戶名稱"/>
+      <field fieldname="Cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="Addr1" displaylabel="地址1"/>
+      <field fieldname="Addr2" displaylabel="地址2"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Zip" displaylabel="郵遞區號"/>
+      <field fieldname="Ziq" displaylabel="貨運區號"/>
+      <field fieldname="Phone" displaylabel="電話"/>
+      <field fieldname="FAX" displaylabel="傳真"/>
+      <field fieldname="GSM" displaylabel="行動"/>
+      <field fieldname="Charger" displaylabel="負責人"/>
+      <field fieldname="Contact" displaylabel="聯絡人"/>
+    </dbquery>
+
+    <dbquery id="sh"><![CDATA[select * from sh where sno='XYZ' order by sno]]>
+      <field fieldname="sno" displaylabel="出貨單號"/>
+      <field fieldname="sdate" displaylabel="出貨日期"/>
+      <field fieldname="cno" displaylabel="客戶代號">
+      <onevent type="onchange">
+        <setvar name="shcshort" value="sh.cucshort"/>
+        <setvar name="shac" value="sh.cuac"/>
+        <setvar name="shpay" value="sh.cupay"/>
+        <setvar name="shAtype" value="sh.cutyp" cnd="sh.cutyp&lt;&gt;''"/>
+        <dbquery id="sa"><![CDATA[select sum(Amount+Tax) A, sum(Paid) B, sum(Amount+Tax-Paid) C
+          from sh where (cno='$sh.cno') and (sdate<'$sys.acbeg')]]></dbquery>
+        <alert message="$('尚有未收帳款: '+STR(sa.c))" cnd="sa.c>0"/>
+      </onevent>
+      </field>
+
+      <dbtable tablename="cu" keyfields="cno" lookupkeyfields="cno">
+        <field fieldname="cname" displaylabel="客戶名稱"/>
+        <field name="cucshort" fieldname="cshort" displaylabel="客戶簡稱"/>
+        <field fieldname="Addr1" displaylabel="地址1"/>
+        <field name="cuac" fieldname="AC" displaylabel="統一編號"/>
+        <field fieldname="cdate" displaylabel="建檔日期"/>
+        <field fieldname="Zip" displaylabel="郵遞區號"/>
+        <field fieldname="Ziq" displaylabel="貨運區號"/>
+        <field fieldname="Phone" displaylabel="電話"/>
+        <field fieldname="FAX" displaylabel="傳真"/>
+        <field fieldname="Contact" displaylabel="聯絡人"/>
+        <field name="cupay" fieldname="Pay" displaylabel="付款"/>
+        <field name="cutyp" fieldname="AType" displaylabel="Typ"/>
+        <field name="cuRem" fieldname="Rem" displaylabel="備註"/>
+        <field name="cuRemark" fieldname="Remark" displaylabel="備註"/>
+        <field fieldname="ship" displaylabel="送貨時間"/>
+      </dbtable>
+
+        <field fieldname="cshort" displaylabel="客戶簡稱"/>
+        <field fieldname="AC" displaylabel="統一編號"/>
+        <field fieldname="Pay" displaylabel="付款"/>
+
+      <field fieldname="eno" displaylabel="員工代號"/>
+      <dbtable tablename="em" keyfields="eno" lookupkeyfields="eno">
+        <field fieldname="ename" displaylabel="員工姓名"/>
+      </dbtable>
+      <field fieldname="fno" displaylabel="貨運代號"/>
+      <dbtable tablename="fm" keyfields="fno" lookupkeyfields="fno">
+        <field fieldname="fname" displaylabel="貨運姓名"/>
+      </dbtable>
+      <field fieldname="gno" displaylabel="板號"/>
+      <field fieldname="fty" displaylabel="件數"/>
+      <field fieldname="ADate" displaylabel="ADate"/>
+      <field fieldname="AType" displaylabel="AType"/>
+      <field fieldname="ANo" displaylabel="ANo"/>
+      <field fieldname="Rem" displaylabel="Rem"/>
+      <field fieldname="Remark" displaylabel="Remark"/>
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Amount" displaylabel="出貨金額"/>
+      <field fieldname="Tax" displaylabel="Tax"/>
+      <field fieldname="Taxx" displaylabel="營業稅額" type="integer" value="sh.Amount*sh.TaxRate/100"/>
+      <field fieldname="AmountTax" displaylabel="AmountTax"/>
+      <field fieldname="AmountTaxx" displaylabel="含稅金額" type="integer" value="sh.Amount+sh.Taxx"/>
+      <field fieldname="Paid" displaylabel="已付金額"/>
+      <field fieldname="UnPaid" displaylabel="未付金額" type="integer" value="sh.Amount+sh.Taxx-sh.Paid"/>
+      <onevent type="onnewrecord">
+        <dbquery id="ab"><![CDATA[select * from num where date='$PDATE']]></dbquery>
+        <if cnd="ab.count=0">
+        <dbquery><![CDATA[insert into num values ('$PDATE',0,0)]]></dbquery>
+        </if>
+        <dbquery><![CDATA[update num set sno=sno+1 where date='$PDATE']]></dbquery>
+        <dbquery id="maxno"><![CDATA[select sno from num where date='$PDATE']]></dbquery>
+        <setvar name="shsno" value="PDATE+FORMAT('%4.4d',maxno.sno)"/>
+        <setvar name="shCno" value="''"/>
+        <setvar name="shEno" value="''"/>
+        <setvar name="shTaxRate" value="5"/>
+        <setvar name="shSdate" value="DATE"/>
+        <setvar name="shAdate" value="DATE"/>
+        <setvar name="shAtype" value="'3'"/>
+        <invoke instance="sh" method="Post"/>
+      </onevent>
+      <onevent type="beforedelete">
+        <setvar name="DeletingItems" value="1"/>
+        <dbquery><![CDATA[delete from sn where sno='$shsno']]></dbquery>
+        <setvar name="DeletingItems" value="0"/>
+      </onevent>
+      <onevent type="beforepost">
+        <setvar name="shcshort" value="sh.cucshort"/>
+        <setvar name="shac" value="sh.cuac"/>
+        <setvar name="shpay" value="sh.cupay"/>
+        <setvar name="shAtype" value="sh.cutyp" cnd="sh.cutyp&lt;&gt;''"/>
+        <setvar name="shTax" value="sh.Taxx"/>
+        <setvar name="shAmountTax" value="sh.AmountTaxx"/>
+      </onevent>
+      <onevent type="afterscroll">
+        <if cnd="B=1">
+        <dbquery id="sn"><![CDATA[select * from sn where sno='$sh.sno' order by sno, itm]]></dbquery>
+        </if>
+      </onevent>
+    </dbquery>
+
+    <function id="UpdateTotal">
+      <exit cnd="DeletingItems"/>
+      <invoke instance="sn" method="GetBookmark" result="BookMark"/>
+      <invoke instance="sn" method="DisableControls"/>
+      <invoke instance="sn" method="First"/>
+      <setvar name="TempTotal" value="0"/>
+      <while cnd="NOT(sn.EOF)">
+        <setvar name="TempTotal" value="TempTotal+sn.Total"/>
+        <invoke instance="sn" method="Next"/>
+      </while>
+      <setvar name="shAmount" value="TempTotal"/>
+      <invoke instance="sn" method="EnableControls"/>
+      <invoke instance="sn" method="GoToBookmark" params="BookMark"/>
+      <invoke instance="sn" method="FreeBookmark"/>
+    </function>
+
+    <dbquery id="sn"><![CDATA[select * from sn where sno='$sh.sno' order by sno, itm]]>
+      <field fieldname="sno" displaylabel="出貨單號"/>
+      <field fieldname="Itm" displaylabel="NO"/>
+      <field fieldname="sdate" displaylabel="出貨日期"/>
+      <field fieldname="cno" displaylabel="客戶代號"/>
+      <field fieldname="eno" displaylabel="員工代號"/>
+      <field fieldname="PNo" displaylabel="料號">
+        <onevent type="onchange">
+          <if cnd="B=0">
+          <dbquery id="bc"><![CDATA[select pno from pa where barcode='$snpno']]></dbquery>
+          <if cnd="bc.count&gt;0">
+            <setvar name="B" value="1"/>
+            <setvar name="snpno" value="bc.pno"/>
+            <setvar name="B" value="0"/>
+          </if>
+          </if>
+          <dbquery id="vp"><![CDATA[select nn.price from sh hh, sn nn where (hh.sno=nn.sno) and (hh.cno='$sh.cno') and (nn.pno='$sn.pno') order by nn.pno, hh.sdate desc]]></dbquery>
+          <setvar name="snPrice" value="vp.Price" cnd="vp.COUNT&gt;0"/>
+          <setvar name="snPrice" value="sn.price1" cnd="vp.COUNT=0"/>
+        </onevent>
+      </field>
+      <dbtable tablename="pa" keyfields="pno" lookupkeyfields="pno">
+        <field fieldname="des" displaylabel="產品名稱"/>
+        <field fieldname="unit" displaylabel="單位"/>
+        <field fieldname="price1" displaylabel="事售價"/>
+        <field fieldname="pricea" displaylabel="標準進價"/>
+      </dbtable>
+      <field fieldname="Qty" displaylabel="數量"/>
+      <field fieldname="Price" displaylabel="單價"/>
+      <field fieldname="Total" displaylabel="金額" type="integer" value="sn.Qty*sn.Price"/>
+      <field fieldname="Rem" displaylabel="備註"/>
+      <onevent type="onnewrecord">
+        <setvar name="snsno" value="shsno"/>
+        <dbquery id="maxitm"><![CDATA[select max(itm) as itm from sn where sno='$shsno']]></dbquery>
+        <setvar name="snitm" value="maxitm.itm+1"/>
+      </onevent>
+      <onevent type="beforeedit">
+        <invoke instance="sh" method="Edit"/>
+      </onevent>
+      <onevent type="beforeinsert">
+        <invoke instance="sh" method="Edit"/>
+      </onevent>
+      <onevent type="beforedelete">
+        <invoke instance="sh" method="Edit"/>
+      </onevent>
+      <onevent type="afterdelete">
+        <go href="@UpdateTotal"/>
+      </onevent>
+      <onevent type="afterpost">
+        <go href="@UpdateTotal"/>
+      </onevent>
+    </dbquery>
+
+    <dbquery id="xy"><![CDATA[select
+    sh.sno,sh.sdate,sh.cno,cu.cshort,cu.AC,sh.Pay,sh.TaxRate,sh.Amount,sh.Tax,sh.AmountTax,sh.Paid,sh.GetDate,sh.PayDate,
+    sh.gno,sh.fty,sh.ChkNo,sh.fno,sh.rempay
+    from sh, cu where sh.cno=cu.cno and sh.sno='XYZ' order by sh.sno]]>
+      <field fieldname="sno" displaylabel="出貨單號"/>
+      <field fieldname="sdate" displaylabel="出貨日期"/>
+      <field fieldname="cno" displaylabel="客戶代號"/>
+      <field fieldname="cshort" displaylabel="客戶簡稱"/>
+      <field fieldname="AC" displaylabel="統一編號"/>
+      <field fieldname="Pay" displaylabel="付款"/>
+      <field fieldname="TaxRate" displaylabel="營業稅率"/>
+      <field fieldname="Amount" displaylabel="出貨金額"/>
+      <field fieldname="Tax" displaylabel="稅率"/>
+      <field fieldname="AmountTax" displaylabel="含稅金額"/>
+      <field fieldname="Paid" displaylabel="已收金額"/>
+      <field fieldname="Taxx" displaylabel="營業稅額" type="integer" value="xy.Amount*xy.TaxRate/100"/>
+      <field fieldname="UnPaid" displaylabel="未收金額" type="integer" value="xy.Amount+xy.Taxx-xy.Paid"/>
+      <field fieldname="GetDate" displaylabel="收票日"/>
+      <field fieldname="PayDate" displaylabel="到期日"/>
+      <field fieldname="gno" displaylabel="板號"/>
+      <field fieldname="fty" displaylabel="件數"/>
+      <field fieldname="ChkNo" displaylabel="支票號碼"/>
+      <field fieldname="fno" displaylabel="貨運代號"/>
+      <field fieldname="RemPay" displaylabel="備註"/>
+    </dbquery>  
+
+    <function id="xyz">
+      <setvar name="BTN" value="BTN+1"/>
+      <if cnd="BTN=1">
+      <setvar name="S" value="' AND 2>1'"/>
+      <setvar name="S" value="S+' AND sh.sdate &gt;= '''+KDRQ1+''''" cnd="KDRQ1&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.sdate &lt;= '''+KDRQ2+''''" cnd="KDRQ2&lt;&gt;''"/>
+      <if cnd="STYLE2=''">
+      <setvar name="S" value="S+' AND sh.cno like '''+STYLE1+'%'''" cnd="STYLE1&lt;&gt;''"/>
+      <else/>
+      <setvar name="S" value="S+' AND sh.cno &gt;= '''+STYLE1+''''" cnd="STYLE1&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.cno &lt;= '''+STYLE2+''''" cnd="STYLE2&lt;&gt;''"/>
+      </if>
+      <setvar name="S" value="S+' AND sh.rempay like ''%'+STYLE3+'%'''" cnd="STYLE3&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.cshort like '''+STYLE5+'%'''" cnd="STYLE5&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND fm.fname like '''+STYLEB+'%'''" cnd="STYLEB&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.ac like '''+STYLE6+'%'''" cnd="STYLE6&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.gno like '''+STYLE7+'%'''" cnd="STYLE7&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.chkno like '''+STYLE8+'%'''" cnd="STYLE8&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.amounttax = '+STYLEA" cnd="STYLEA&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.pay like '''+STYLE9+''''" cnd="STYLE9&lt;&gt;''"/>
+      <setvar name="S" value="S+' AND sh.AmountTax-ifnull(sh.Paid,0)>0'" cnd="YN='Y'"/>
+      <setvar name="S" value="' AND sh.sno=''XYZ'''" cnd="S=' AND 2>1'"/>
+
+    <dbquery id="xy"><![CDATA[select
+    sh.sno,sh.sdate,sh.cno,cu.cshort,cu.AC,sh.Pay,sh.TaxRate,sh.Amount,sh.Tax,sh.AmountTax,sh.Paid,sh.GetDate,sh.PayDate,
+    sh.gno,sh.fty,sh.ChkNo,sh.fno,sh.rempay
+    from sh, cu where sh.cno=cu.cno $S order by sh.sno]]>
+    </dbquery>
+
+    <dbquery id="sh"><![CDATA[select * from sh where 1 $S order by sno]]></dbquery>
+   
+      </if>
+      <setvar name="BTN" value="0"/>
+    </function>
+
+    <function id="clr">
+      <setvar name="KDRQ1" value="''"/>
+      <setvar name="KDRQ2" value="''"/>
+      <setvar name="STYLE1" value="''"/>
+      <setvar name="STYLE2" value="''"/>
+      <setvar name="STYLE3" value="''"/>
+      <setvar name="STYLE5" value="''"/>
+      <setvar name="STYLE6" value="''"/>
+      <setvar name="STYLE9" value="''"/>
+      <setvar name="STYLEA" value="''"/>
+      <setvar name="STYLEB" value="''"/>
+      <go href="@xyz"/>
+    </function>
+
+    <function id="set">
+        <setvar name="_KDRQ1" value="KDRQ1"/>
+        <setvar name="_KDRQ2" value="KDRQ2"/>
+        <setvar name="_STYLE1" value="STYLE1"/>
+        <setvar name="_STYLE2" value="STYLE2"/>
+        <setvar name="_STYLE3" value="STYLE3"/>
+        <setvar name="_STYLE5" value="STYLE5"/>
+        <setvar name="_STYLE6" value="STYLE6"/>
+        <setvar name="_STYLE7" value="STYLE7"/>
+        <setvar name="_STYLE8" value="STYLE8"/>
+        <setvar name="_STYLE9" value="STYLE9"/>
+        <setvar name="_STYLEA" value="STYLEA"/>
+        <setvar name="_STYLEB" value="STYLEB"/>
+    </function>
+
+<pagecontrol name="pagecontrol" activepageindex="1">
+<tabsheet caption="出貨建檔">
+
+    <datasource dataset="sh">
+      <p align="center"><navigator/></p>
+      <table columns="2" align="LL">
+      <tr>
+      <td>
+        出貨單號:<input field="Sno" size="14" readonly="true"/><br/>
+        出貨日期:<input field="Sdate" size="14"/>(1.中午前2.下午3.均可)<br/>
+        客戶代號:<input field="Cno" size="14" oncustomdlg="#PC"/><input field="cshort" readonly="true" size="10"/><input field="cupay" size="10"/>
+        <input field="ship" size="2"/><input field="cdate" size="14"/><br/>
+        客戶地址:<input field="addr1"/><br/>
+        客戶備註:<input field="cuRem" size="40"/><br/>
+        公司備註:<input field="cuRemark" size="40"/><br/>
+        員工代號:<input field="eno" size="14" lookup="em;eno;ename"/>
+        <input field="ename" size="10"/><br/>
+        貨運代號:<input field="fno" size="14" lookup="fm;fno;fname"/>
+        <input field="fname" size="10"/><br/>
+      </td>
+      <td>
+        板....號:<input field="gno" size="14"/><br/>
+        件....數:<input field="fty" size="14"/><br/>
+        發票日期:<input field="ADate" size="14"/><br/>
+        發票聯式:<input field="AType" size="1"/>(1.不開2.二聯3.三聯)<br/>
+        發票號碼:<input field="ANo" size="14"/><br/>
+        營業稅率:<input field="TaxRate" size="2"/><br/>
+        備....註:<input field="Rem" size="60"/><br/>
+      </td>
+      </tr>
+      </table>
+      <datasource dataset="sn" masterfields="sno">
+        <p align="center"><navigator/></p>
+        <dbgrid width="1000" height="200">
+          <item field="Pno" size="14" lookup="pa;pno;des"/>
+          <item field="des" size="40"/>
+          <item field="unit" size="4"/>
+          <item field="Price1" size="9"/>
+          <item field="Qty" size="8"/>
+          <item field="Price" size="9" oncustomdlg="#PRICE"/>
+          <item field="Total" size="11"/>
+          <item field="Rem" size="12"/>
+        </dbgrid>
+      </datasource>
+      <p align="right">
+        合計金額:<input field="Amount" size="11" readonly="true"/><br/>
+        營業稅額:<input field="Taxx" size="11"/><br/>
+        已付金額:<input field="Paid" size="11"/><br/>
+        未付金額:<input field="UnPaid" size="11"/><br/>
+      </p>
+    </datasource>
+
+</tabsheet>
+<tabsheet caption="出貨查詢">
+
+      <table columns="6" align="LLLLLL">
+      <tr>
+      <td>出貨日期起:<input name="KDRQ1" value="$_KDRQ1" type="date" size="14"/><br/>出貨日期訖:<input name="KDRQ2" value="$_KDRQ2" type="date" size="14"/></td>
+      <td>客戶代號起:<input name="STYLE1" value="$_STYLE1" size="12" lookup="cu;cno;cshort"/><br/>客戶代號訖:<input name="STYLE2" value="$_STYLE2" size="12" lookup="cu;cno;cshort"/></td>
+      <td>客戶簡稱:<input name="STYLE5" value="$_STYLE5" size="12"/><br/>統一編號:<input name="STYLE6" value="$_STYLE6" size="12"/></td>
+      <td>含稅:<input name="STYLEA" value="$_STYLEA" size="12"/><br/>付款:<input name="STYLE9" value="$_STYLE9" size="12"/></td>
+      <td>板號:<input name="STYLE7" value="$_STYLE7" size="12"/><br/>票號:<input name="STYLE8" value="$_STYLE8" size="12"/></td>
+      <td>貨運:<input name="STYLEB" value="$_STYLEB" size="12" lookup="sql;fm1;select fname from fm order by fno"/><br/>備註:<input name="STYLE3" value="$_STYLE3" size="12"/><br/>未收:<input type="checkbox" name="YN" value="Y"/></td>
+      <td><input name="EXE" value="查詢" type="button" onclick="@xyz"/><br/><input name="CLR" value="清除" type="button" onclick="@clr"/></td>
+      </tr>
+      </table>
+
+    <datasource dataset="xy">
+      <p align="center"><navigator/></p>
+      <dbgrid width="1000" height="450">
+        <item field="sno"/>
+        <item field="sdate" size="14"/>
+        <item field="cno" lookup="cu;cno;cshort"/>
+        <item field="cshort" size="8"/>
+        <item field="ac" size="8"/>
+        <item field="AmountTax" size="11"/>
+        <item field="pay" size="8"/>
+        <item field="Paid" size="11"/>
+        <item field="UnPaid" size="11"/>
+        <item field="GetDate" size="10"/>
+        <item field="PayDate" size="10"/>
+        <item field="gno" size="10"/>
+        <item field="ChkNo" size="10"/>
+        <item field="fty" size="6"/>
+        <item field="RemPay" size="40"/>
+        <onevent type="ondblclick">
+          <go href="@set"/>
+          <setprop name="pagecontrol" prop="ActivePageIndex" value="0"/>
+          <invoke instance="sh" method="locate" arg1="'sno'" arg2="[xy.sno]" arg3="[loCaseInsensitive,loPartialKey]"/>
+        </onevent>
+      </dbgrid>
+    </datasource>
+      
+</tabsheet>
+</pagecontrol>
+    
+    <setvar name="B" value="1"/>
+
+    <do type="accept" label="出貨單">
+      <go href="#P1"/>
+    </do>
+    <do type="accept" label="進貨單">
+      <go href="#P2"/>
+    </do>
+    <do type="accept" label="宅配通">
+      <go href="#P9"/>
+    </do>
+    <do type="accept" label="通盈貼頭">
+      <go href="#P8"/>
+    </do>
+    <do type="accept" label="通盈-事務通">
+      <go href="#PA"/>
+    </do>
+    <do type="accept" label="通盈-豐原">
+      <go href="#PB"/>
+    </do>
+    <do type="accept" label="通盈-影印紙">
+      <go href="#PE"/>
+    </do>
+    <do type="accept" label="新竹代收">
+      <go href="#P3"/>
+    </do>
+    <do type="accept" label="新竹月結">
+      <go href="#P4"/>
+    </do>
+    <do type="accept" label="新竹貼頭">
+      <go href="#P7"/>
+    </do>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="PC" title="客戶資料建檔">
+    <invoke instance="cu1" method="locate" arg1="'cno'" arg2="[sh.cno]" arg3="[loCaseInsensitive,loPartialKey]"/>
+    <p>
+      <datasource dataset="cu1">
+        <navigator/>
+        <br/>
+        <dbgrid width="750" height="420" entertotab="false" multiselect="true">
+          <item field="Cno" size="8"/>
+          <item field="Cname" size="30"/>
+          <item field="Cshort" size="8"/>
+          <item field="Addr1" size="60"/>
+          <item field="Addr2" size="60"/>
+          <item field="AC" size="8"/>
+          <item field="Zip" size="8"/>
+          <item field="Ziq" size="8"/>
+          <item field="Phone" size="15"/>
+          <item field="FAX" size="15"/>
+          <item field="GSM" size="15"/>
+          <item field="Charger" size="10"/>
+          <item field="Contact" size="10"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="accept" label="確定">
+      <prev>
+        <setvar name="shcno" value="cu1.cno"/>
+      </prev>
+    </do>
+    <do type="accept" label="取消">
+      <prev/>
+    </do>
+  </card>
+  <card id="PRICE" title="客戶售價查詢">
+    <dbquery id="cp">
+    <![CDATA[
+    SELECT
+      hh.sno, hh.sdate, nn.price
+    FROM
+      sh hh, sn nn
+    WHERE
+      hh.sno=nn.sno and hh.cno = '$sh.cno' and nn.pno='$sn.pno'
+    ORDER BY
+      hh.sno desc, hh.sdate
+    ]]>
+    </dbquery>
+      <datasource dataset="cp">
+        <navigator/>
+        <br/>
+        <dbgrid width="560" height="240">
+          <item field="sno" title="單號" size="12"/>
+          <item field="sdate" title="日期" size="12"/>
+          <item field="Price" title="售價" size="12"/>
+        </dbgrid>
+      </datasource>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+  <card id="P1" title="出貨單" device="PRV" paper="Letter" printer="$sys.printer1">
+    <setvar name="P" value="1"/>
+    <setvar name="L" value="0"/>
+
+    <function id="header">
+      <out><![CDATA[<table width="740" align="center"><tr><td>]]></out>
+      <p align="center"><big><b>$sys.company<br/><u>出貨單</u></b></big></p>
+      <table border="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="350">客戶名稱:$sh.cname[$sh.cno]</td>
+          <td>&#160;</td>
+          <td width="150">出貨日期:$sh.sdate</td>
+        </tr>
+        <tr>
+          <td>統一編號:$sh.ac</td>
+          <td>電話:$sh.phone</td>
+          <td>出貨單號:$sh.sno</td>
+        </tr>
+        <tr>
+          <td>聯&#160;絡&#160;人:$sh.contact</td>
+          <td>&#160;</td>
+          <td>發票日期:$sh.adate</td>
+        </tr>
+        <tr>
+          <td>業&#160;務&#160;員:$sh.ename</td>
+          <td>傳真:$sh.fax</td>
+          <td>發票聯式:$(IF(sh.atype=2,'二聯',IF(sh.atype=3,'三聯','不開')))</td>
+        </tr>
+        <tr>
+          <td colspan="2">送貨地址:$sh.addr1</td>
+          <td>發票號碼:$sh.ano</td>
+        </tr>
+      </table>
+      <out><![CDATA[<table class="p10" width="100%">]]></out>
+      <tr>
+        <th width="80">品號</th>
+        <th width="250">品名規格</th>
+        <th width="60">數量</th>
+        <th width="50">單位</th>
+        <th width="60">單價</th>
+        <th width="70">金額</th>
+        <th>備註</th>
+      </tr>
+<!--
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table border="0" width="100%">]]></out>
+-->
+      <tr>
+        <td height="6"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </function>
+
+    <function id="normal">
+      <tr>
+        <td>$(sn.pno)</td>
+        <td><p align="left">$(sn.des)</p></td>
+        <td><p align="center">$(FORMAT('%6.0n',sn.qty*1.0))</p></td>
+        <td><p align="center">$(sn.unit)</p></td>
+        <td><p align="right">$(FORMAT('%6.1n',sn.price*1.0))</p></td>
+        <td><p align="right">$(FORMAT('%8.0n',sn.total*1.0))</p></td>
+        <td><p>$(sn.rem)</p></td>
+      </tr>
+    </function>
+
+    <function id="space">
+      <tr>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+    </function>
+
+    <function id="footer">
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table class="b10" width="100%">]]></out>
+      <tr>
+        <td width="500" colspan="4">&#160;</td>
+        <td width="100"><p align="center">金額合計<br/>稅&#160;&#160;額<br/>金額總計</p></td>
+        <td width="100"><p align="right">&#160;<br/>&#160;<br/>&#160;</p></td>
+      </tr>
+      <out><![CDATA[</table>]]></out>
+      <br/>
+      <out><![CDATA[<table border="0" cellspacing="0" width="100%"><tr><td>出貨︰</td><td>出單︰</td><td>複檢:</td><td><p align="right">頁數:$(CEIL(sn.count / 9))-$P</p></td></tr></table>]]></out>
+      <out><![CDATA[</td></tr></table>]]></out>
+    </function>
+
+    <function id="summary">
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table class="b10" width="100%">]]></out>
+      <tr>
+        <td width="500" colspan="4">備註:$sh.rem</td>
+        <td width="100"><p align="center">金額合計<br/>稅&#160;&#160;額<br/>金額總計</p></td>
+        <td width="100"><p align="right">$(FORMAT('%8.0n',sh.amount*1.0))<br/>
+        $(FORMAT('%8.0n',sh.tax*1.0))<br/>$(FORMAT('%8.0n',(sh.amount+sh.tax)*1.0))<br/></p></td>
+      </tr>
+      <out><![CDATA[</table>]]></out>
+      <br/>
+      <out><![CDATA[<table border="0" cellspacing="0" width="100%"><tr><td>出貨︰</td><td>出單︰</td><td>複檢:</td><td><p align="right">頁數:$(CEIL(sn.count / 9))-$P</p></td></tr></table>]]></out>
+      <out><![CDATA[</td></tr></table>]]></out>
+    </function>
+
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <invoke instance="sn" method="GetBookmark" result="BookMark"/>
+    <invoke instance="sn" method="DisableControls"/>
+    <invoke instance="sn" method="First"/>
+    <go href="@header"/>
+    <while cnd="NOT(sn.EOF)">
+      <setvar name="L" value="L+1"/>
+      <if cnd="L>9">
+        <go href="@footer"/>
+        <newpage/>
+        <setvar name="P" value="P+1"/>
+        <setvar name="L" value="1"/>
+        <go href="@header"/>
+      </if>
+      <go href="@normal"/>
+      <invoke instance="sn" method="Next"/>
+    </while>
+    <while cnd="L&lt;9">
+      <setvar name="L" value="L+1"/>
+      <go href="@space"/>
+    </while>
+    <go href="@summary"/>
+    <invoke instance="sn" method="EnableControls"/>
+    <invoke instance="sn" method="GoToBookmark" params="BookMark"/>
+    <invoke instance="sn" method="FreeBookmark"/>
+  </card>
+  <card id="P2" title="進貨單" device="PRV" paper="Letter" printer="$sys.printer1">
+    <setvar name="P" value="1"/>
+    <setvar name="L" value="0"/>
+
+    <function id="header">
+      <out><![CDATA[<table width="760" align="center"><tr><td>]]></out>
+      <p align="center"><big><b>$sys.company<br/><u>進貨單</u></b></big></p>
+      <table border="0" width="100%">
+        <tr>
+          <td width="350">客戶名稱:$sh.cname[$sh.cno]</td>
+          <td>&#160;</td>
+          <td width="150">出貨日期:$sh.sdate</td>
+        </tr>
+        <tr>
+          <td>統一編號:$sh.ac</td>
+          <td>電話:$sh.phone</td>
+          <td>出貨單號:$sh.sno</td>
+        </tr>
+        <tr>
+          <td>聯&#160;絡&#160;人:$sh.contact</td>
+          <td>&#160;</td>
+          <td>發票日期:$sh.adate</td>
+        </tr>
+        <tr>
+          <td>業&#160;務&#160;員:$sh.ename</td>
+          <td>傳真:$sh.fax</td>
+          <td>發票聯式:$(IF(sh.atype=2,'二聯',IF(sh.atype=3,'三聯','不開')))</td>
+        </tr>
+        <tr>
+          <td colspan="2">送貨地址:$sh.addr1</td>
+          <td>發票號碼:$sh.ano</td>
+        </tr>
+      </table>
+      <out><![CDATA[<table border="1" cellspacing="0" width="100%">]]></out>
+      <tr>
+        <th width="100">品號</th>
+        <th width="200">品名規格</th>
+        <th width="45">單位</th>
+        <th width="90">數量</th>
+        <th width="90">單價</th>
+        <th width="90">金額</th>
+        <th>備註</th>
+      </tr>
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table border="0" width="100%">]]></out>
+      <tr>
+        <th width="100" height="1"></th>
+        <th width="200"></th>
+        <th width="45"></th>
+        <th width="90"></th>
+        <th width="90"></th>
+        <th width="90"></th>
+        <th></th>
+      </tr>
+    </function>
+
+    <function id="normal">
+      <setvar name="T" value="sn.qty*sn.pricea"/>
+      <setvar name="TempTotal" value="TempTotal+T"/>
+      <tr>
+        <td>$(sn.pno)</td>
+        <td><p align="left">$(sn.des)</p></td>
+        <td><p align="center">$(sn.unit)</p></td>
+        <td><p align="right">$(FORMAT('%6.0n',sn.qty*1.0))</p></td>
+        <td><p align="right">$(FORMAT('%6.1n',sn.pricea*1.0))</p></td>
+        <td><p align="right">$(FORMAT('%8.0n',T*1.0))</p></td>
+        <td><p>$(sn.rem)</p></td>
+      </tr>
+    </function>
+
+    <function id="space">
+      <tr>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+        <td>&#160;</td>
+      </tr>
+    </function>
+
+    <function id="footer">
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table border="1" cellspacing="0" width="100%">]]></out>
+      <tr>
+        <td width="500" colspan="4">&#160;</td>
+        <td width="100"><p align="center">金額合計<br/>稅&#160;&#160;額<br/>金額總計</p></td>
+        <td width="100"><p align="right">&#160;<br/>&#160;<br/>&#160;</p></td>
+      </tr>
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[</td></tr></table>]]></out>
+      <out><![CDATA[<p align="center">頁數:$(CEIL(sn.count / 9))-$P</p>]]></out>
+    </function>
+
+    <function id="summary">
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[<table border="1" cellspacing="0" width="100%">]]></out>
+      <tr>
+        <td width="500" colspan="4">備註:$sh.rem</td>
+        <td width="100"><p align="center">金額合計<br/>稅&#160;&#160;額<br/>金額總計</p></td>
+        <td width="100"><p align="right">$(FORMAT('%8.0n',TempTotal*1.0))<br/>
+        $(FORMAT('%8.0n',ROUND(TempTotal*sh.taxrate/100)*1.0))<br/>
+        $(FORMAT('%8.0n',(TempTotal+(ROUND(TempTotal*sh.taxrate/100)))*1.0))<br/></p></td>
+      </tr>
+      <out><![CDATA[</table>]]></out>
+      <out><![CDATA[</td></tr></table>]]></out>
+      <out><![CDATA[<p align="center">頁數:$(CEIL(sn.count / 9))-$P</p>]]></out>
+    </function>
+
+    <setvar name="T" value="0"/>
+    <setvar name="TempTotal" value="0"/>
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <invoke instance="sn" method="GetBookmark" result="BookMark"/>
+    <invoke instance="sn" method="DisableControls"/>
+    <invoke instance="sn" method="First"/>
+    <go href="@header"/>
+    <while cnd="NOT(sn.EOF)">
+      <setvar name="L" value="L+1"/>
+      <if cnd="L>9">
+        <go href="@footer"/>
+        <newpage/>
+        <setvar name="P" value="P+1"/>
+        <setvar name="L" value="1"/>
+        <go href="@header"/>
+      </if>
+      <go href="@normal"/>
+      <invoke instance="sn" method="Next"/>
+    </while>
+    <while cnd="L&lt;9">
+      <setvar name="L" value="L+1"/>
+      <go href="@space"/>
+    </while>
+    <go href="@summary"/>
+    <invoke instance="sn" method="EnableControls"/>
+    <invoke instance="sn" method="GoToBookmark" params="BookMark"/>
+    <invoke instance="sn" method="FreeBookmark"/>
+  </card>
+  <card id="P3" title="新竹貼頭1" device="PRV" paper="Letter" printer="$sys.printer2">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="700" align="center"><tr><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="300"><big><b>$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+          <td>&#160;</td>
+          <td width="150">&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.addr</b></big></td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;$(sh.contact)</b></big></td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.Ac</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>&#160;&#160;&#160;&#160;$sh.phone</b></big></td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>1</b></big></td>
+          <td><big><b>$(sh.amount+sh.taxx)</b></big></td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="P4" title="新竹貼頭2" device="PRV" paper="Letter" printer="$sys.printer3">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="700" align="center"><tr><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="300"><big><b>$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+          <td>&#160;</td>
+          <td width="150">&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.addr</b></big></td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;$(sh.contact)</b></big></td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.Ac</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>&#160;&#160;&#160;&#160;$sh.phone</b></big></td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>1</b></big></td>
+          <td><big><b>$(sh.amount+sh.taxx)</b></big></td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="PP" title="產品資料建檔">
+    <dbtable name="pa1" tablename="pa">
+      <field fieldname="Pno" displaylabel="品號"/>
+      <field fieldname="Des" displaylabel="品名規格"/>
+    </dbtable>
+    <invoke instance="pa1" method="locate" arg1="'pno'" arg2="[snPnoo]" arg3="[loCaseInsensitive,loPartialKey]"/>
+    <p>
+      <datasource dataset="pa1">
+        <navigator/>
+        <br/>
+        <dbgrid width="360" height="200">
+          <item field="Pno" size="14"/>
+          <item field="Des" size="30"/>
+        </dbgrid>
+      </datasource>
+    </p>
+    <do type="prev" label="關閉">
+      <setvar name="snPno" value="pa1.pno"/>
+      <prev/>
+    </do>
+  </card>
+  <card id="order" title="order" device="PRV" paper="Letter">
+    <dbquery id="od">
+    <![CDATA[
+SELECT DISTINCT p.Sub, s.Pno, p.Des
+FROM sn s, pa p
+WHERE
+(s.Cno = '$sh.cno')
+ AND (p.Pno = s.Pno)
+ORDER BY p.Sub, s.Pno
+    ]]>
+    </dbquery>
+    <output dataset="od" dialog="pno" rows="27">
+      <page>
+        <setvar name="L" value="0"/>
+        <setvar name="I" value="0"/>
+        <out><![CDATA[<table width="700" align="center"><tr><td>]]></out>
+        <p align="center"><big><b>$sys.company<br/><u>訂貨單</u></b></big></p>
+        <table border="1" cellpadding="4" cellspacing="0" width="100%">
+          <tr>
+            <td width="15%" align="center">公司名稱</td>
+            <td width="35%">$sh.cname</td>
+            <td width="15%" align="center">統一編號</td>
+            <td width="35%">$sh.ac</td>
+          </tr>
+          <tr>
+            <td align="center">聯絡電話</td>
+            <td>$sh.phone</td>
+            <td align="center">傳真</td>
+            <td>$sh.fax</td>
+          </tr>
+          <tr>
+            <td align="center">訂購聯絡人</td>
+            <td>$sh.contact</td>
+            <td align="center" rowspan="2">付款方式</td>
+            <td>□&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;付現</td>
+          </tr>
+          <tr>
+            <td align="center">電子郵件</td>
+            <td>&#160;</td>
+            <td>□&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;電匯</td>
+          </tr>
+          <tr>
+            <td align="center">送貨地址</td>
+            <td colspan="3">$sh.addr1</td>
+          </tr>
+        </table>
+        <br/>
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <th width="90">類別</th>
+            <th width="90">產品編號</th>
+            <th width="210">產品名稱</th>
+            <th width="63">單價</th>
+            <th width="63">訂購數量</th>
+            <th width="63">金額</th>
+          </tr>
+          <group change="od.sub">
+          <setvar name="I" value="0"/>
+          <group>
+            <tr>
+              <td>$(IF(I=0,od.sub,'&#160;'))</td>
+              <td>$(od.pno)</td>
+              <td>$(od.des)</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+            </tr>
+            <setvar name="L" value="L+1"/>
+            <setvar name="I" value="I+1"/>
+          </group>
+          </group>
+          <while cnd="L&lt;=20">
+            <tr>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+              <td>&#160;</td>
+            </tr>
+            <setvar name="L" value="L+1"/>
+          </while>
+        </table>
+        <p>$sys.rem</p>
+        <out><![CDATA[</td></tr></table>]]></out>
+      </page>
+    </output>
+  </card>
+  <card id="P6" title="新竹貼頭1" device="PRV" paper="Letter" printer="$sys.printer2">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="700" align="center"><tr><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="300"><big><b>$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+          <td>&#160;</td>
+          <td width="150">&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.addr</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>$sys.company</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>&#160;&#160;&#160;$sys.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>&#160;&#160;$sys.Ac</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td><big><b>&#160;&#160;&#160;$sh.cno</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="P7" title="新竹貼頭1" device="PRV" paper="Letter" printer="LQ-3002">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="100%" align="center"><tr><td>
+      <table border="0" width="100%">
+        <tr>
+          <td colspan="5" height="9"></td>
+        </tr>
+        <tr>
+          <td width="30">&#160;</td>
+          <td width="40">&#160;</td>
+          <td width="250"><big><b>&#160;$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+          <td>&#160;</td>
+          <td width="150">&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>0269619-000-8</b></big></td>
+          <td colspan="2"><big><b>$sh.phone</b></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$sys.phone</b></big></td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;($sh.contact)</b></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$(sys.company)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2" valign="top"><big><b>$sh.addr1</b></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$sys.addr</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>板號:$sh.gno</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>豐原</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;41</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>006</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="P8" title="通盈貼頭" device="PRV" paper="Letter" printer="LQ310">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="100%"><tr><td>
+      <table border="0" width="400">
+        <tr>
+          <td width="50" height="26">&#160;</td>
+          <td>&#160;</td>
+          <td width="200">&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)</b></big></td>
+        </tr>
+        <tr>
+          <td height="12"></td>
+          <td colspan="2"></td>
+        </tr>
+        <tr>
+          <td height="40">&#160;</td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+        </tr>
+        <tr>
+          <td colspan="3" height="6"></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>板號:$sh.gno</b></big></td>
+        </tr>
+        <tr>
+          <td colspan="3" height="6"></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.phone</b></big></td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="P9" title="宅配通" device="PRV" paper="Letter" printer="LQ-680">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="750"><tr><td width="15"></td><td>
+      <table border="0" width="100%">
+        <tr>
+          <td height="20"></td>
+          <td width="300"></td>
+          <td width="100"></td>
+          <td width="100"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>$sh.ziq</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="10"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td colspan="3"><big><b>$sh.addr1</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td colspan="2"><big><b>&#160;&#160;$(sh.cname)&#160;&#160;$(sh.contact)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>$sh.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;<big><b>420-54</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="20"></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>$sys.addr</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td><big><b>$(sys.company)</b></big></td>
+          <td>&#160;</td>
+          <td colspan="2"><big><big><big><big><big><b>&#160;$(MID(sh.ziq,1,1))&#160;&#160;$(MID(sh.ziq,2,1))&#160;&#160;$(MID(sh.ziq,3,1))&#160;&#160;$(MID(sh.ziq,4,1))&#160;&#160;$(MID(sh.ziq,5,1))</b></big></big></big></big></big></td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;<big><b>$sys.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td>&#160;</td>
+          <td>&#160;&#160;&#160;<b>2764275001</b></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+    </td></tr></table>
+  </card>
+  <card id="PA" device="PRV" paper="Letter" printer="XYZ">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="100%" align="center"><tr><td width="30"></td><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="310">&#160;</td>
+          <td><big><b>&#160;$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;($sh.contact)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sys.company)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sys.addr</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$sys.phone</b></big></td>
+          <td><big><b>300007</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+    </td></tr></table>
+  </card>
+  <card id="PB" device="PRV" paper="Letter" printer="XYZ">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="100%" align="center"><tr><td width="30"></td><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="310">&#160;</td>
+          <td><big><b>&#160;$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;($sh.contact)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>豐原文具百貨有限公司</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>豐原市豐西街165號</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$sys.phone</b></big></td>
+          <td><big><b>300048</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+    </td></tr></table>
+  </card>
+  <card id="PE" device="PRV" paper="Letter" printer="XYZ">
+    <if cnd="sn.state&lt;&gt;'BROWSE'"><invoke instance="sn" method="post"/></if>
+    <if cnd="sh.state&lt;&gt;'BROWSE'"><invoke instance="sh" method="post"/></if>
+    <table width="100%" align="center"><tr><td width="30"></td><td>
+      <table border="0" width="100%">
+        <tr>
+          <td width="310">&#160;</td>
+          <td><big><b>&#160;$(FORMAT('%2.2d',YEAR(sh.sdate)-2000))&#160;&#160;&#160;$(FORMAT('%2.2d',MONTH(sh.sdate)))&#160;&#160;&#160;$(FORMAT('%2.2d',DAY(sh.sdate)))</b></big></td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sh.cname)&#160;&#160;($sh.contact)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.addr1</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="42">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sh.phone</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+      <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="30" height="6"></td>
+          <td width="80"></td>
+          <td width="160"></td>
+          <td width="120"></td>
+          <td width="200"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>           
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$(sys.company)</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td colspan="2"><big><b>$sys.addr</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+        <tr>
+          <td height="32">&#160;</td>
+          <td>&#160;</td>
+          <td><big><b>$sys.phone</b></big></td>
+          <td><big><b>250006</b></big></td>
+          <td>&#160;</td>
+          <td>&#160;</td>
+        </tr>
+      </table>
+
+    </td></tr></table>
+  </card>
+</wml>

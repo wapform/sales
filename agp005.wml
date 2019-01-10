@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="big5"?>
+<wml>
+  <card id="P" title="員工資料建檔" width="660">
+    <dbtable tablename="em">
+      <field fieldname="ENo" displaylabel="員工代號"/>
+      <field fieldname="EName" displaylabel="員工姓名"/>
+      <field fieldname="ID" displaylabel="身份證號"/>
+      <field fieldname="Birthday" displaylabel="出生日期"/>
+      <field fieldname="City" displaylabel="籍貫"/>
+      <field fieldname="Sex" displaylabel="性別"/>
+      <field fieldname="Maried" displaylabel="婚別"/>
+      <field fieldname="Army" displaylabel="役別"/>
+      <field fieldname="School" displaylabel="學歷"/>
+      <field fieldname="Start" displaylabel="到職日期"/>
+      <field fieldname="Leave" displaylabel="離職日期"/>
+      <field fieldname="Part" displaylabel="部門"/>
+      <field fieldname="Position" displaylabel="職稱"/>
+      <field fieldname="Phone1" displaylabel="聯絡電話"/>
+      <field fieldname="Phone2" displaylabel="永久電話"/>
+      <field fieldname="Addr1" displaylabel="聯絡地址"/>
+      <field fieldname="Addr2" displaylabel="永久地址"/>
+      <field fieldname="Rem" displaylabel="備註"/>
+    </dbtable>
+    <datasource dataset="em">
+        <p align="center">
+        <navigator/>
+        </p>
+        <br/>
+        <fieldset>
+        員工代號:<input field="ENo" size="6"/><br/>
+        員工姓名:<input field="EName" size="8"/><br/>
+        身份證號:<input field="ID" size="10"/><br/>
+        出生日期:<input field="Birthday" size="10"/><br/>
+        籍貫:<input field="City" size="10"/><br/>
+        性別:<input field="Sex" size="1"/><br/>
+        婚別:<input field="Maried" size="1"/><br/>
+        役別:<input field="Army" size="1"/><br/>
+        學歷:<input field="School" size="8"/><br/>
+        到職日期:<input field="Start" size="10"/><br/>
+        離職日期:<input field="Leave" size="10"/><br/>
+        部門:<input field="Part" size="8"/><br/>
+        職稱:<input field="Position" size="8"/><br/>
+        聯絡電話:<input field="Phone1" size="14"/><br/>
+        永久電話:<input field="Phone2" size="14"/><br/>
+        聯絡地址:<input field="Addr1" size="40"/><br/>
+        永久地址:<input field="Addr2" size="40"/><br/>
+        備註:<input field="Rem" size="40"/>
+        </fieldset>
+    </datasource>
+    <do type="prev" label="關閉">
+      <prev/>
+    </do>
+  </card>
+</wml>
